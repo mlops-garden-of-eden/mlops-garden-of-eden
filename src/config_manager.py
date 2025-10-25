@@ -36,9 +36,9 @@ class DataConfig:
     features_table_name: str
     local_raw_path: str
     local_train_data_path: str
-    local_test_data_path: str
     features: FeatureConfig
-    meta_features: List[str]
+    meta_features: List[str] = field(default_factory=lambda: ["id", "_source", "_ingestion_timestamp"])
+    local_test_data_path: str = ""
     intermediate_clean_table: str = "cleaned_data" # Field with default comes last
 
 @dataclass(frozen=True)
