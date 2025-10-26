@@ -1,6 +1,8 @@
 # src/experiment_runner.py
 
+import mlflow
 import pandas as pd
+from datetime import datetime
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score
@@ -30,8 +32,8 @@ class ExperimentRunner:
 
     def load_data(self) -> pd.DataFrame:
         """Reads the clean, intermediate data by calling the dedicated loader."""
-        
-        data_source = self.config.data_source 
+
+        data_source = self.config.data_source
         logger.info(f"Loading data from configured source: {data_source}")
         
         data = load_training_data(
@@ -119,8 +121,14 @@ class ExperimentRunner:
         results = {}
         best_accuracy = -1
         best_run_name = ""
-        
-        # Outer Loop: Iterate over all configured models 
+
+        # Create a new MLFlow experiment for the entire set of models being tested
+        mlflow.autolog()
+        iso_timestamp = datetime.now().isoformat()
+        experiment_name = f"{self.config.tracking.experiment_name}/{iso_timestamp}"
+        mlflow.set_experiment(experiment_name)
+
+        # Outer Loop: Iterate over all configured models
         for model_name in self.config.tuning.models_to_run:
             logger.info(f"--- Processing model: {model_name} ---")
             
@@ -139,12 +147,13 @@ class ExperimentRunner:
             for i, hyperparams in enumerate(hp_combinations):
                 run_name = f"{model_name}_Run_{i + 1}"
                 logger.info(f"Starting run: {run_name} with HPs: {hyperparams}")
-                
-                # Build Full Pipeline and Instantiate Model
-                
-                # Instantiate the model with the specific combination of hyperparameters
-                classifier = ModelClass(random_state=self.config.random_seed, **hyperparams)
-                
+
+                # Record each combination of hyperparameter and model as a single MLFlow run within the experiment
+                with mlflow.start_run(run_name=run_name):
+                    # Build Full Pipeline and Instantiate Model
+
+                    # Instantiate the model with the specific combination of hyperparameters
+                    classifier = ModelClass(random_state=self.config.random_seed, **hyperparams)
                 # Create the reusable preprocessor
                 numerical_features = self.config.data.features.numerical
                 categorical_features = self.config.data.features.categorical
@@ -170,8 +179,12 @@ class ExperimentRunner:
 
                 # Store Results and Track Best Model
                 # NOTE: In MLFlow you will log model_name, hyperparams, and metrics for this run
+                results[run_name] = {
+                    "train_accuracy": train_acc,
+                    "val_accuracy": val_acc,
+                    "model": full_pipeline
+                }
 
-                results[run_name] = {"train_accuracy": train_acc, "val_accuracy": val_acc, "model": full_pipeline}
                 if val_acc > best_accuracy:
                     best_accuracy = val_acc
                     best_run_name = run_name
