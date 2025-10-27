@@ -16,7 +16,7 @@ import random
 RAW_DATA_PATH = Path("data/train.csv")
 TEST_SET_OUTPUT_PATH = Path("data/test_set.csv")
 INITIAL_DATASET_OUTPUT_PATH = Path("data/dataset_initial.csv")
-TARGET_COLUMN = 'Fertilizer Name'
+TARGET_COLUMN = 'fertilizer_name'
 TEST_SAMPLE_SIZE = 150_000
 INITIAL_SAMPLE_SIZE = 150_000
 EXCLUDE_LABEL = 'DAP'
@@ -54,6 +54,11 @@ def prepare_initial_datasets(
     except FileNotFoundError:
         print(f"ERROR: Raw data file not found at {raw_path}. Please check the path.")
         return pd.DataFrame()
+
+    # Change the column names to remove typos and spaces
+    df_full.columns = [col.strip().lower().replace(" ", "_").replace("temparature", "temperature") for col in df_full.columns]
+    df_full.to_csv(raw_path, index=False)  # Save corrected column names back to CSV
+    print(f"Raw data loaded successfully with {len(df_full)} rows and columns: {df_full.columns.tolist()}")
 
     # --- A. Create Permanent Test Set (Step 1) ---
     

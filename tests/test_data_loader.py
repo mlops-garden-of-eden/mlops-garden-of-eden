@@ -2,6 +2,7 @@ import pytest
 import pandas as pd
 from pathlib import Path
 from dataclasses import replace
+from pyspark.sql import SparkSession
 
 from src.data_loader import load_training_data, DataSource 
 from src.config_manager import DataConfig, FeatureConfig 
@@ -95,22 +96,40 @@ def test_local_data_loading_file_not_found(data_loader_setup, tmp_path):
         )
 
 
-def test_databricks_loading_not_implemented(data_loader_setup):
+def test_databricks_loading_success(data_loader_setup):
     """
-    Verifies that the 'databricks' data source path correctly raises a 
-    NotImplementedError, as this feature is pending implementation.
+    Verifies that the 'databricks' data source path correctly loads data from a Spark table.
+    This test requires a Spark session and a temporary table to be created.
     """
-    mock_config, _ = data_loader_setup
+    mock_config, df_expected = data_loader_setup
     
-    # Assert that calling the function with 'databricks' raises the specific error
-    with pytest.raises(NotImplementedError) as excinfo:
-        load_training_data(
-            data_config=mock_config, 
-            source=DataSource.DATABRICKS.value
-        )
+    # Get or create Spark session
+    spark = SparkSession.builder.getOrCreate()
+    
+    # Create catalog and schema if they don't exist
+    catalog_name = mock_config.catalog_name
+    schema_name = mock_config.schema_name
+    table_name = mock_config.raw_table_name
+
+    # Write test data to the table
+    full_table_name = f"{catalog_name}.{schema_name}.{table_name}"
+    df_spark = spark.createDataFrame(df_expected)
+    df_spark.write \
+        .option("overwriteSchema", "true") \
+        .mode("overwrite") \
+        .saveAsTable(full_table_name)
+
+    # Call the loader with the 'databricks' source
+    df_loaded = load_training_data(
+        data_config=mock_config, 
+        source=DataSource.DATABRICKS.value
+    )
         
-    # Check the error message contains the expected generic string
-    assert "Databricks loading is not yet implemented" in str(excinfo.value)
+    # Assert they are the same after sorting by 'id'
+    pd.testing.assert_frame_equal(
+        df_loaded.sort_values(by='id').reset_index(drop=True),
+        df_expected.sort_values(by='id').reset_index(drop=True)
+    )
 
 
 def test_invalid_source_raises_value_error(data_loader_setup):

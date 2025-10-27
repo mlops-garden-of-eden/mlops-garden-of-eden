@@ -4,7 +4,7 @@
 # Settings unique to an environment will be overridden by config_dev.yaml or config_prod.yaml.
 
 project_name: "Garden_of_Eden"
-target_column: "Fertilizer Name" # label name
+target_column: "fertilizer_name" # label name
 random_seed: 42 # Seed for reproducibility.
 data_source: "local"    # local | databricks
 
@@ -21,22 +21,28 @@ data:
   features_table_name: "processed_features"
 
   # Path to initial local Kaggle CSV (used only for initial ingestion)
-  local_raw_path: "data/raw_data.csv"
+  local_raw_path: "data/train.csv"
 
   # Path to local training data
   local_train_data_path: "data/dataset_initial.csv"
+  local_test_data_path: "data/test_set.csv"
+
+  meta_features:
+    - "id"
+    - "_source"
+    - "_ingestion_timestamp"
 
   features:
     numerical: 
-      - "Temparature"
-      - "Humidity"
-      - "Moisture"
-      - "Nitrogen"
-      - "Potassium"
-      - "Phosphorous"
+      - "temperature"
+      - "humidity"
+      - "moisture"
+      - "nitrogen"
+      - "potassium"
+      - "phosphorous"
     categorical:
-      - "Soil Type"
-      - "Crop Type"
+      - "soil_type"
+      - "crop_type"
 
 # --- Tuning/Execution Configuration ---
 tuning:
