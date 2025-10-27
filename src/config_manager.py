@@ -42,6 +42,18 @@ class DataConfig:
     intermediate_clean_table: str = "cleaned_data" # Field with default comes last
 
 @dataclass(frozen=True)
+class FeatureOperation:
+    """Schema for transformations of features"""
+    output: str
+    formula: str
+
+@dataclass(frozen=True)
+class FeatureEngineeringConfig:
+    """Schema for feature engineering"""
+    enable: bool = False
+    operations: List[FeatureOperation] = field(default_factory=list)
+
+@dataclass(frozen=True)
 class TuningConfig:
     """Schema for pipeline execution settings."""
     models_to_run: List[str]
@@ -71,6 +83,7 @@ class Config:
     tuning: TuningConfig
     tracking: TrackingConfig
     models: ModelsConfig 
+    feature_engineering: FeatureEngineeringConfig = FeatureEngineeringConfig()
 
 # --- Loading Function ---
 
@@ -117,6 +130,18 @@ def get_config(base_path: str = 'config_base.yaml') -> Config:
     data_config = DataConfig(features=feature_config, **data_dict)
     config_dict.pop('data')
 
+    # Instantiate feature_engineering config if present in YAML
+    fe_cfg = config_dict.pop("feature_engineering", None)
+    if fe_cfg:
+        operations_list = fe_cfg.get("operations", [])
+        operations_objects = [FeatureOperation(**op) for op in operations_list]
+        feature_engineering_config = FeatureEngineeringConfig(
+            enable=fe_cfg.get("enable", False),
+            operations=operations_objects
+        )
+    else:
+        feature_engineering_config = FeatureEngineeringConfig()
+
     # Instantiate Tuning and Tracking Configs
     tuning_config = TuningConfig(**config_dict.pop('tuning'))
     
@@ -140,12 +165,13 @@ def get_config(base_path: str = 'config_base.yaml') -> Config:
     # Construct the top-level Config
     try:
         config = Config(
-            data=data_config,
-            tuning=tuning_config,
-            tracking=tracking_config,
-            models=models_config,
-            **config_dict
-        )
+        data=data_config,
+        tuning=tuning_config,
+        tracking=tracking_config,
+        models=models_config,
+        feature_engineering=feature_engineering_config,
+        **config_dict
+    )
     except TypeError as e:
         raise ValueError(f"Configuration validation failed for top-level Config: {e}")
         

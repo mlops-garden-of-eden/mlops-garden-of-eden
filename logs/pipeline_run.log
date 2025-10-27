@@ -1,0 +1,351 @@
+2025-10-13 23:43:27,397 - INFO - ProjectLogger - --- MLOps Pipeline Start ---
+2025-10-13 23:43:27,397 - INFO - ProjectLogger - Initialized Experiment Runner for environment: dev
+2025-10-13 23:43:27,397 - INFO - ProjectLogger - Starting MLOps experiment pipeline orchestration.
+2025-10-13 23:43:27,397 - INFO - ProjectLogger - Loading data from configured source: local
+2025-10-13 23:43:27,397 - CRITICAL - ProjectLogger - Pipeline terminated with a CRITICAL failure: Local training data file not found at: data/dataset_initial.csv
+Traceback (most recent call last):
+  File "/Users/davidgoh/LocalFiles/mlops-garden-of-eden/src/experiments_runner.py", line 158, in run_experiment_pipeline
+    df_raw = self.load_data()
+  File "/Users/davidgoh/LocalFiles/mlops-garden-of-eden/src/experiments_runner.py", line 35, in load_data
+    data = load_training_data(
+  File "/Users/davidgoh/LocalFiles/mlops-garden-of-eden/src/data_loader.py", line 35, in load_training_data
+    raise FileNotFoundError(f"Local training data file not found at: {local_path}")
+FileNotFoundError: Local training data file not found at: data/dataset_initial.csv
+2025-10-13 23:43:27,397 - CRITICAL - ProjectLogger - Pipeline terminated with a critical failure.
+2025-10-13 23:56:10,488 - INFO - ProjectLogger - --- MLOps Pipeline Start ---
+2025-10-13 23:56:10,488 - INFO - ProjectLogger - Initialized Experiment Runner for environment: dev
+2025-10-13 23:56:10,489 - INFO - ProjectLogger - Starting MLOps experiment pipeline orchestration.
+2025-10-13 23:56:10,489 - INFO - ProjectLogger - Loading data from configured source: local
+2025-10-13 23:56:10,890 - INFO - ProjectLogger - Splitting data into training and validation sets.
+2025-10-13 23:56:11,590 - INFO - ProjectLogger - Train set size: 600000, Validation set size: 150000
+2025-10-13 23:56:11,590 - INFO - ProjectLogger - Fitting LabelEncoder on training labels (Fertilizer Name).
+2025-10-13 23:56:11,677 - INFO - ProjectLogger - Labels transformed to numerical: ['10-26-26' '14-35-14' '17-17-17' '20-20' '28-28' 'DAP' 'Urea']
+2025-10-13 23:56:11,677 - INFO - ProjectLogger - Starting model training and hyperparameter exploration cycle.
+2025-10-13 23:56:11,687 - INFO - ProjectLogger - --- Processing model: RandomForestClassifier ---
+2025-10-13 23:56:11,687 - INFO - ProjectLogger - Generated 1 hyperparameter combination(s) for RandomForestClassifier.
+2025-10-13 23:56:11,687 - INFO - ProjectLogger - Starting run: RandomForestClassifier_Run_1 with HPs: {'n_estimators': 200, 'max_depth': 12, 'min_samples_leaf': 5, 'class_weight': 'balanced'}
+2025-10-13 23:57:33,389 - INFO - ProjectLogger - Validation Accuracy: 0.1663
+2025-10-13 23:57:33,390 - INFO - ProjectLogger - --- Processing model: LogisticRegression ---
+2025-10-13 23:57:33,390 - INFO - ProjectLogger - Generated 1 hyperparameter combination(s) for LogisticRegression.
+2025-10-13 23:57:33,390 - INFO - ProjectLogger - Starting run: LogisticRegression_Run_1 with HPs: {'penalty': 'l2', 'C': 1.0, 'solver': 'saga', 'max_iter': 500, 'class_weight': 'balanced'}
+2025-10-14 00:01:48,110 - INFO - ProjectLogger - Validation Accuracy: 0.1269
+2025-10-14 00:01:48,111 - INFO - ProjectLogger - --- Processing model: XGBoostClassifier ---
+2025-10-14 00:01:48,111 - INFO - ProjectLogger - Generated 4 hyperparameter combination(s) for XGBoostClassifier.
+2025-10-14 00:01:48,111 - INFO - ProjectLogger - Starting run: XGBoostClassifier_Run_1 with HPs: {'n_estimators': 100, 'objective': 'multi:softprob', 'max_depth': 5, 'learning_rate': 0.1}
+2025-10-14 00:02:04,748 - INFO - ProjectLogger - Validation Accuracy: 0.1831
+2025-10-14 00:02:04,748 - INFO - ProjectLogger - Starting run: XGBoostClassifier_Run_2 with HPs: {'n_estimators': 100, 'objective': 'multi:softprob', 'max_depth': 5, 'learning_rate': 0.2}
+2025-10-14 00:02:23,809 - INFO - ProjectLogger - Validation Accuracy: 0.1880
+2025-10-14 00:02:23,809 - INFO - ProjectLogger - Starting run: XGBoostClassifier_Run_3 with HPs: {'n_estimators': 100, 'objective': 'multi:softprob', 'max_depth': 7, 'learning_rate': 0.1}
+2025-10-14 00:02:52,786 - INFO - ProjectLogger - Validation Accuracy: 0.1881
+2025-10-14 00:02:52,787 - INFO - ProjectLogger - Starting run: XGBoostClassifier_Run_4 with HPs: {'n_estimators': 100, 'objective': 'multi:softprob', 'max_depth': 7, 'learning_rate': 0.2}
+2025-10-14 00:03:14,453 - INFO - ProjectLogger - Validation Accuracy: 0.1900
+2025-10-14 00:03:14,454 - INFO - ProjectLogger - --- All experiments finished. Best run: XGBoostClassifier_Run_4 (Accuracy: 0.1900) ---
+2025-10-14 00:03:14,472 - INFO - ProjectLogger - Pipeline execution completed successfully.
+2025-10-14 00:03:14,512 - INFO - ProjectLogger - Pipeline finished successfully. Best run ID: Placeholder_RunID_XGBoostClassifier_Run_4
+2025-10-22 11:00:18,162 - INFO - ProjectLogger - --- MLOps Pipeline Start ---
+2025-10-22 11:00:18,163 - INFO - ProjectLogger - Initialized Experiment Runner for environment: dev
+2025-10-22 11:00:18,163 - INFO - ProjectLogger - Starting MLOps experiment pipeline orchestration.
+2025-10-22 11:00:18,163 - INFO - ProjectLogger - Loading data from configured source: local
+2025-10-22 11:00:18,163 - CRITICAL - ProjectLogger - Pipeline terminated with a CRITICAL failure: Local training data file not found at: data/dataset_initial.csv
+Traceback (most recent call last):
+  File "/Users/davidgoh/LocalFiles/mlops-garden-of-eden/src/experiments_runner.py", line 164, in run_experiment_pipeline
+    df_raw = self.load_data()
+  File "/Users/davidgoh/LocalFiles/mlops-garden-of-eden/src/experiments_runner.py", line 35, in load_data
+    data = load_training_data(
+  File "/Users/davidgoh/LocalFiles/mlops-garden-of-eden/src/data_loader.py", line 35, in load_training_data
+    raise FileNotFoundError(f"Local training data file not found at: {local_path}")
+FileNotFoundError: Local training data file not found at: data/dataset_initial.csv
+2025-10-22 11:00:18,163 - CRITICAL - ProjectLogger - Pipeline terminated with a critical failure.
+2025-10-22 11:10:34,831 - INFO - ProjectLogger - --- MLOps Pipeline Start ---
+2025-10-22 11:10:34,831 - INFO - ProjectLogger - Initialized Experiment Runner for environment: dev
+2025-10-22 11:10:34,831 - INFO - ProjectLogger - Starting MLOps experiment pipeline orchestration.
+2025-10-22 11:10:34,831 - INFO - ProjectLogger - Loading data from configured source: local
+2025-10-22 11:10:34,831 - CRITICAL - ProjectLogger - Pipeline terminated with a CRITICAL failure: Local training data file not found at: data/dataset_initial.csv
+Traceback (most recent call last):
+  File "/Users/davidgoh/LocalFiles/mlops-garden-of-eden/src/experiments_runner.py", line 164, in run_experiment_pipeline
+    df_raw = self.load_data()
+  File "/Users/davidgoh/LocalFiles/mlops-garden-of-eden/src/experiments_runner.py", line 35, in load_data
+    data = load_training_data(
+  File "/Users/davidgoh/LocalFiles/mlops-garden-of-eden/src/data_loader.py", line 35, in load_training_data
+    raise FileNotFoundError(f"Local training data file not found at: {local_path}")
+FileNotFoundError: Local training data file not found at: data/dataset_initial.csv
+2025-10-22 11:10:34,832 - CRITICAL - ProjectLogger - Pipeline terminated with a critical failure.
+2025-10-22 11:12:07,304 - INFO - ProjectLogger - --- MLOps Pipeline Start ---
+2025-10-22 11:12:07,304 - INFO - ProjectLogger - Initialized Experiment Runner for environment: dev
+2025-10-22 11:12:07,304 - INFO - ProjectLogger - Starting MLOps experiment pipeline orchestration.
+2025-10-22 11:12:07,304 - INFO - ProjectLogger - Loading data from configured source: local
+2025-10-22 11:12:07,309 - INFO - ProjectLogger - Splitting data into training and validation sets.
+2025-10-22 11:12:07,316 - INFO - ProjectLogger - Train set size: 80, Validation set size: 20
+2025-10-22 11:12:07,316 - INFO - ProjectLogger - Fitting LabelEncoder on training labels (Fertilizer Name).
+2025-10-22 11:12:07,317 - INFO - ProjectLogger - Labels transformed to numerical: ['10-26-26' '14-35-14' '17-17-17' '20-20' '28-28' 'DAP' 'Urea']
+2025-10-22 11:12:07,317 - INFO - ProjectLogger - Feature engineering step reached (currently does nothing).
+2025-10-22 11:12:07,317 - INFO - ProjectLogger - Starting model training and hyperparameter exploration cycle.
+2025-10-22 11:12:07,317 - INFO - ProjectLogger - --- Processing model: RandomForestClassifier ---
+2025-10-22 11:12:07,317 - INFO - ProjectLogger - Generated 1 hyperparameter combination(s) for RandomForestClassifier.
+2025-10-22 11:12:07,317 - INFO - ProjectLogger - Starting run: RandomForestClassifier_Run_1 with HPs: {'n_estimators': 200, 'max_depth': 12, 'min_samples_leaf': 5, 'class_weight': 'balanced'}
+2025-10-22 11:12:07,454 - INFO - ProjectLogger - Train Accuracy: 0.8250 | Validation Accuracy: 0.1500
+2025-10-22 11:12:07,454 - INFO - ProjectLogger - --- Processing model: LogisticRegression ---
+2025-10-22 11:12:07,454 - INFO - ProjectLogger - Generated 1 hyperparameter combination(s) for LogisticRegression.
+2025-10-22 11:12:07,454 - INFO - ProjectLogger - Starting run: LogisticRegression_Run_1 with HPs: {'penalty': 'l2', 'C': 1.0, 'solver': 'saga', 'max_iter': 500, 'class_weight': 'balanced'}
+2025-10-22 11:12:07,465 - INFO - ProjectLogger - Train Accuracy: 0.1250 | Validation Accuracy: 0.1000
+2025-10-22 11:12:07,465 - INFO - ProjectLogger - --- Processing model: XGBoostClassifier ---
+2025-10-22 11:12:07,466 - INFO - ProjectLogger - Generated 4 hyperparameter combination(s) for XGBoostClassifier.
+2025-10-22 11:12:07,466 - INFO - ProjectLogger - Starting run: XGBoostClassifier_Run_1 with HPs: {'n_estimators': 100, 'objective': 'multi:softprob', 'max_depth': 5, 'learning_rate': 0.1}
+2025-10-22 11:12:07,762 - INFO - ProjectLogger - Train Accuracy: 1.0000 | Validation Accuracy: 0.2500
+2025-10-22 11:12:07,762 - INFO - ProjectLogger - Starting run: XGBoostClassifier_Run_2 with HPs: {'n_estimators': 100, 'objective': 'multi:softprob', 'max_depth': 5, 'learning_rate': 0.2}
+2025-10-22 11:12:07,973 - INFO - ProjectLogger - Train Accuracy: 1.0000 | Validation Accuracy: 0.2500
+2025-10-22 11:12:07,973 - INFO - ProjectLogger - Starting run: XGBoostClassifier_Run_3 with HPs: {'n_estimators': 100, 'objective': 'multi:softprob', 'max_depth': 7, 'learning_rate': 0.1}
+2025-10-22 11:12:08,118 - INFO - ProjectLogger - Train Accuracy: 1.0000 | Validation Accuracy: 0.2500
+2025-10-22 11:12:08,118 - INFO - ProjectLogger - Starting run: XGBoostClassifier_Run_4 with HPs: {'n_estimators': 100, 'objective': 'multi:softprob', 'max_depth': 7, 'learning_rate': 0.2}
+2025-10-22 11:12:08,222 - INFO - ProjectLogger - Train Accuracy: 1.0000 | Validation Accuracy: 0.2000
+2025-10-22 11:12:08,222 - INFO - ProjectLogger - --- All experiments finished. Best run: XGBoostClassifier_Run_1 (Accuracy: 0.2500) ---
+2025-10-22 11:12:08,223 - INFO - ProjectLogger - Pipeline execution completed successfully.
+2025-10-22 11:12:08,223 - INFO - ProjectLogger - Pipeline finished successfully. Best run ID: Placeholder_RunID_XGBoostClassifier_Run_1
+2025-10-22 11:14:09,104 - INFO - ProjectLogger - --- MLOps Pipeline Start ---
+2025-10-22 11:14:09,104 - INFO - ProjectLogger - Initialized Experiment Runner for environment: dev
+2025-10-22 11:14:09,104 - INFO - ProjectLogger - Starting MLOps experiment pipeline orchestration.
+2025-10-22 11:14:09,104 - INFO - ProjectLogger - Loading data from configured source: local
+2025-10-22 11:14:09,108 - INFO - ProjectLogger - Splitting data into training and validation sets.
+2025-10-22 11:14:09,114 - INFO - ProjectLogger - Train set size: 80, Validation set size: 20
+2025-10-22 11:14:09,114 - INFO - ProjectLogger - Fitting LabelEncoder on training labels (Fertilizer Name).
+2025-10-22 11:14:09,115 - INFO - ProjectLogger - Labels transformed to numerical: ['10-26-26' '14-35-14' '17-17-17' '20-20' '28-28' 'DAP' 'Urea']
+2025-10-22 11:14:09,116 - INFO - ProjectLogger - Added NPK_Ratio feature.
+2025-10-22 11:14:09,116 - INFO - ProjectLogger - Starting model training and hyperparameter exploration cycle.
+2025-10-22 11:14:09,117 - INFO - ProjectLogger - --- Processing model: RandomForestClassifier ---
+2025-10-22 11:14:09,117 - INFO - ProjectLogger - Generated 1 hyperparameter combination(s) for RandomForestClassifier.
+2025-10-22 11:14:09,117 - INFO - ProjectLogger - Starting run: RandomForestClassifier_Run_1 with HPs: {'n_estimators': 200, 'max_depth': 12, 'min_samples_leaf': 5, 'class_weight': 'balanced'}
+2025-10-22 11:14:09,249 - INFO - ProjectLogger - Train Accuracy: 0.9000 | Validation Accuracy: 0.2000
+2025-10-22 11:14:09,250 - INFO - ProjectLogger - --- Processing model: LogisticRegression ---
+2025-10-22 11:14:09,250 - INFO - ProjectLogger - Generated 1 hyperparameter combination(s) for LogisticRegression.
+2025-10-22 11:14:09,250 - INFO - ProjectLogger - Starting run: LogisticRegression_Run_1 with HPs: {'penalty': 'l2', 'C': 1.0, 'solver': 'saga', 'max_iter': 500, 'class_weight': 'balanced'}
+2025-10-22 11:14:09,260 - INFO - ProjectLogger - Train Accuracy: 0.1250 | Validation Accuracy: 0.1000
+2025-10-22 11:14:09,260 - INFO - ProjectLogger - --- Processing model: XGBoostClassifier ---
+2025-10-22 11:14:09,260 - INFO - ProjectLogger - Generated 4 hyperparameter combination(s) for XGBoostClassifier.
+2025-10-22 11:14:09,261 - INFO - ProjectLogger - Starting run: XGBoostClassifier_Run_1 with HPs: {'n_estimators': 100, 'objective': 'multi:softprob', 'max_depth': 5, 'learning_rate': 0.1}
+2025-10-22 11:14:09,519 - INFO - ProjectLogger - Train Accuracy: 1.0000 | Validation Accuracy: 0.1000
+2025-10-22 11:14:09,519 - INFO - ProjectLogger - Starting run: XGBoostClassifier_Run_2 with HPs: {'n_estimators': 100, 'objective': 'multi:softprob', 'max_depth': 5, 'learning_rate': 0.2}
+2025-10-22 11:14:09,701 - INFO - ProjectLogger - Train Accuracy: 1.0000 | Validation Accuracy: 0.2000
+2025-10-22 11:14:09,701 - INFO - ProjectLogger - Starting run: XGBoostClassifier_Run_3 with HPs: {'n_estimators': 100, 'objective': 'multi:softprob', 'max_depth': 7, 'learning_rate': 0.1}
+2025-10-22 11:14:09,807 - INFO - ProjectLogger - Train Accuracy: 1.0000 | Validation Accuracy: 0.2000
+2025-10-22 11:14:09,807 - INFO - ProjectLogger - Starting run: XGBoostClassifier_Run_4 with HPs: {'n_estimators': 100, 'objective': 'multi:softprob', 'max_depth': 7, 'learning_rate': 0.2}
+2025-10-22 11:14:09,904 - INFO - ProjectLogger - Train Accuracy: 1.0000 | Validation Accuracy: 0.2000
+2025-10-22 11:14:09,904 - INFO - ProjectLogger - --- All experiments finished. Best run: RandomForestClassifier_Run_1 (Accuracy: 0.2000) ---
+2025-10-22 11:14:09,905 - INFO - ProjectLogger - Pipeline execution completed successfully.
+2025-10-22 11:14:09,905 - INFO - ProjectLogger - Pipeline finished successfully. Best run ID: Placeholder_RunID_RandomForestClassifier_Run_1
+2025-10-22 11:22:26,582 - INFO - ProjectLogger - --- MLOps Pipeline Start ---
+2025-10-22 11:22:26,582 - INFO - ProjectLogger - Initialized Experiment Runner for environment: dev
+2025-10-22 11:22:26,582 - INFO - ProjectLogger - Starting MLOps experiment pipeline orchestration.
+2025-10-22 11:22:26,582 - INFO - ProjectLogger - Loading data from configured source: local
+2025-10-22 11:22:26,587 - INFO - ProjectLogger - Splitting data into training and validation sets.
+2025-10-22 11:22:26,594 - INFO - ProjectLogger - Train set size: 80, Validation set size: 20
+2025-10-22 11:22:26,595 - INFO - ProjectLogger - Fitting LabelEncoder on training labels (Fertilizer Name).
+2025-10-22 11:22:26,595 - INFO - ProjectLogger - Labels transformed to numerical: ['10-26-26' '14-35-14' '17-17-17' '20-20' '28-28' 'DAP' 'Urea']
+2025-10-22 11:22:26,595 - CRITICAL - ProjectLogger - Pipeline terminated with a CRITICAL failure: 'FeatureOperation' object has no attribute 'get'
+Traceback (most recent call last):
+  File "/Users/davidgoh/LocalFiles/mlops-garden-of-eden/src/experiments_runner.py", line 197, in run_experiment_pipeline
+    df_train, df_val = self.preprocess_and_feature_engineer(df_train, df_val)
+  File "/Users/davidgoh/LocalFiles/mlops-garden-of-eden/src/experiments_runner.py", line 54, in preprocess_and_feature_engineer
+    output_col = op.get("output")
+AttributeError: 'FeatureOperation' object has no attribute 'get'
+2025-10-22 11:22:26,596 - CRITICAL - ProjectLogger - Pipeline terminated with a critical failure.
+2025-10-22 11:24:43,274 - INFO - ProjectLogger - --- MLOps Pipeline Start ---
+2025-10-22 11:24:43,274 - INFO - ProjectLogger - Initialized Experiment Runner for environment: dev
+2025-10-22 11:24:43,274 - INFO - ProjectLogger - Starting MLOps experiment pipeline orchestration.
+2025-10-22 11:24:43,274 - INFO - ProjectLogger - Loading data from configured source: local
+2025-10-22 11:24:43,279 - INFO - ProjectLogger - Splitting data into training and validation sets.
+2025-10-22 11:24:43,286 - INFO - ProjectLogger - Train set size: 80, Validation set size: 20
+2025-10-22 11:24:43,286 - INFO - ProjectLogger - Fitting LabelEncoder on training labels (Fertilizer Name).
+2025-10-22 11:24:43,287 - INFO - ProjectLogger - Labels transformed to numerical: ['10-26-26' '14-35-14' '17-17-17' '20-20' '28-28' 'DAP' 'Urea']
+2025-10-22 11:24:43,293 - INFO - ProjectLogger - Created feature 'NPK_Ratio' using formula: Nitrogen / (Phosphorous + Potassium + 1e-5)
+2025-10-22 11:24:43,293 - INFO - ProjectLogger - Starting model training and hyperparameter exploration cycle.
+2025-10-22 11:24:43,293 - INFO - ProjectLogger - --- Processing model: RandomForestClassifier ---
+2025-10-22 11:24:43,293 - INFO - ProjectLogger - Generated 1 hyperparameter combination(s) for RandomForestClassifier.
+2025-10-22 11:24:43,293 - INFO - ProjectLogger - Starting run: RandomForestClassifier_Run_1 with HPs: {'n_estimators': 200, 'max_depth': 12, 'min_samples_leaf': 5, 'class_weight': 'balanced'}
+2025-10-22 11:24:43,430 - INFO - ProjectLogger - Train Accuracy: 0.9000 | Validation Accuracy: 0.2000
+2025-10-22 11:24:43,430 - INFO - ProjectLogger - --- Processing model: LogisticRegression ---
+2025-10-22 11:24:43,430 - INFO - ProjectLogger - Generated 1 hyperparameter combination(s) for LogisticRegression.
+2025-10-22 11:24:43,430 - INFO - ProjectLogger - Starting run: LogisticRegression_Run_1 with HPs: {'penalty': 'l2', 'C': 1.0, 'solver': 'saga', 'max_iter': 500, 'class_weight': 'balanced'}
+2025-10-22 11:24:43,440 - INFO - ProjectLogger - Train Accuracy: 0.1250 | Validation Accuracy: 0.1000
+2025-10-22 11:24:43,440 - INFO - ProjectLogger - --- Processing model: XGBoostClassifier ---
+2025-10-22 11:24:43,441 - INFO - ProjectLogger - Generated 4 hyperparameter combination(s) for XGBoostClassifier.
+2025-10-22 11:24:43,441 - INFO - ProjectLogger - Starting run: XGBoostClassifier_Run_1 with HPs: {'n_estimators': 100, 'objective': 'multi:softprob', 'max_depth': 5, 'learning_rate': 0.1}
+2025-10-22 11:24:43,717 - INFO - ProjectLogger - Train Accuracy: 1.0000 | Validation Accuracy: 0.1000
+2025-10-22 11:24:43,717 - INFO - ProjectLogger - Starting run: XGBoostClassifier_Run_2 with HPs: {'n_estimators': 100, 'objective': 'multi:softprob', 'max_depth': 5, 'learning_rate': 0.2}
+2025-10-22 11:24:43,929 - INFO - ProjectLogger - Train Accuracy: 1.0000 | Validation Accuracy: 0.2000
+2025-10-22 11:24:43,929 - INFO - ProjectLogger - Starting run: XGBoostClassifier_Run_3 with HPs: {'n_estimators': 100, 'objective': 'multi:softprob', 'max_depth': 7, 'learning_rate': 0.1}
+2025-10-22 11:24:44,093 - INFO - ProjectLogger - Train Accuracy: 1.0000 | Validation Accuracy: 0.2000
+2025-10-22 11:24:44,093 - INFO - ProjectLogger - Starting run: XGBoostClassifier_Run_4 with HPs: {'n_estimators': 100, 'objective': 'multi:softprob', 'max_depth': 7, 'learning_rate': 0.2}
+2025-10-22 11:24:44,174 - INFO - ProjectLogger - Train Accuracy: 1.0000 | Validation Accuracy: 0.2000
+2025-10-22 11:24:44,174 - INFO - ProjectLogger - --- All experiments finished. Best run: RandomForestClassifier_Run_1 (Accuracy: 0.2000) ---
+2025-10-22 11:24:44,175 - INFO - ProjectLogger - Pipeline execution completed successfully.
+2025-10-22 11:24:44,175 - INFO - ProjectLogger - Pipeline finished successfully. Best run ID: Placeholder_RunID_RandomForestClassifier_Run_1
+2025-10-22 11:27:44,387 - INFO - ProjectLogger - --- MLOps Pipeline Start ---
+2025-10-22 11:27:44,387 - INFO - ProjectLogger - Initialized Experiment Runner for environment: dev
+2025-10-22 11:27:44,387 - INFO - ProjectLogger - Starting MLOps experiment pipeline orchestration.
+2025-10-22 11:27:44,387 - INFO - ProjectLogger - Loading data from configured source: local
+2025-10-22 11:27:44,393 - INFO - ProjectLogger - Splitting data into training and validation sets.
+2025-10-22 11:27:44,399 - INFO - ProjectLogger - Train set size: 80, Validation set size: 20
+2025-10-22 11:27:44,399 - INFO - ProjectLogger - Fitting LabelEncoder on training labels (Fertilizer Name).
+2025-10-22 11:27:44,400 - INFO - ProjectLogger - Labels transformed to numerical: ['10-26-26' '14-35-14' '17-17-17' '20-20' '28-28' 'DAP' 'Urea']
+2025-10-22 11:27:44,405 - INFO - ProjectLogger - Created feature 'NPK_Ratio' using formula: Nitrogen / (Phosphorous + Potassium + 1e-5)
+2025-10-22 11:27:44,408 - INFO - ProjectLogger - Created feature 'Moisture_Humidity_Diff' using formula: Moisture - Humidity
+2025-10-22 11:27:44,408 - INFO - ProjectLogger - Starting model training and hyperparameter exploration cycle.
+2025-10-22 11:27:44,408 - INFO - ProjectLogger - --- Processing model: RandomForestClassifier ---
+2025-10-22 11:27:44,408 - INFO - ProjectLogger - Generated 1 hyperparameter combination(s) for RandomForestClassifier.
+2025-10-22 11:27:44,408 - INFO - ProjectLogger - Starting run: RandomForestClassifier_Run_1 with HPs: {'n_estimators': 200, 'max_depth': 12, 'min_samples_leaf': 5, 'class_weight': 'balanced'}
+2025-10-22 11:27:44,541 - INFO - ProjectLogger - Train Accuracy: 0.9125 | Validation Accuracy: 0.1500
+2025-10-22 11:27:44,541 - INFO - ProjectLogger - --- Processing model: LogisticRegression ---
+2025-10-22 11:27:44,541 - INFO - ProjectLogger - Generated 1 hyperparameter combination(s) for LogisticRegression.
+2025-10-22 11:27:44,542 - INFO - ProjectLogger - Starting run: LogisticRegression_Run_1 with HPs: {'penalty': 'l2', 'C': 1.0, 'solver': 'saga', 'max_iter': 500, 'class_weight': 'balanced'}
+2025-10-22 11:27:44,572 - INFO - ProjectLogger - Train Accuracy: 0.1250 | Validation Accuracy: 0.1000
+2025-10-22 11:27:44,573 - INFO - ProjectLogger - --- Processing model: XGBoostClassifier ---
+2025-10-22 11:27:44,573 - INFO - ProjectLogger - Generated 4 hyperparameter combination(s) for XGBoostClassifier.
+2025-10-22 11:27:44,573 - INFO - ProjectLogger - Starting run: XGBoostClassifier_Run_1 with HPs: {'n_estimators': 100, 'objective': 'multi:softprob', 'max_depth': 5, 'learning_rate': 0.1}
+2025-10-22 11:27:44,833 - INFO - ProjectLogger - Train Accuracy: 1.0000 | Validation Accuracy: 0.1500
+2025-10-22 11:27:44,833 - INFO - ProjectLogger - Starting run: XGBoostClassifier_Run_2 with HPs: {'n_estimators': 100, 'objective': 'multi:softprob', 'max_depth': 5, 'learning_rate': 0.2}
+2025-10-22 11:27:44,985 - INFO - ProjectLogger - Train Accuracy: 1.0000 | Validation Accuracy: 0.1000
+2025-10-22 11:27:44,985 - INFO - ProjectLogger - Starting run: XGBoostClassifier_Run_3 with HPs: {'n_estimators': 100, 'objective': 'multi:softprob', 'max_depth': 7, 'learning_rate': 0.1}
+2025-10-22 11:27:45,087 - INFO - ProjectLogger - Train Accuracy: 1.0000 | Validation Accuracy: 0.1000
+2025-10-22 11:27:45,087 - INFO - ProjectLogger - Starting run: XGBoostClassifier_Run_4 with HPs: {'n_estimators': 100, 'objective': 'multi:softprob', 'max_depth': 7, 'learning_rate': 0.2}
+2025-10-22 11:27:45,177 - INFO - ProjectLogger - Train Accuracy: 1.0000 | Validation Accuracy: 0.1000
+2025-10-22 11:27:45,177 - INFO - ProjectLogger - --- All experiments finished. Best run: RandomForestClassifier_Run_1 (Accuracy: 0.1500) ---
+2025-10-22 11:27:45,178 - INFO - ProjectLogger - Pipeline execution completed successfully.
+2025-10-22 11:27:45,178 - INFO - ProjectLogger - Pipeline finished successfully. Best run ID: Placeholder_RunID_RandomForestClassifier_Run_1
+2025-10-22 11:29:27,630 - INFO - ProjectLogger - --- MLOps Pipeline Start ---
+2025-10-22 11:29:27,630 - INFO - ProjectLogger - Initialized Experiment Runner for environment: dev
+2025-10-22 11:29:27,630 - INFO - ProjectLogger - Starting MLOps experiment pipeline orchestration.
+2025-10-22 11:29:27,630 - INFO - ProjectLogger - Loading data from configured source: local
+2025-10-22 11:29:27,632 - INFO - ProjectLogger - Splitting data into training and validation sets.
+2025-10-22 11:29:27,634 - INFO - ProjectLogger - Train set size: 80, Validation set size: 20
+2025-10-22 11:29:27,634 - INFO - ProjectLogger - Fitting LabelEncoder on training labels (Fertilizer Name).
+2025-10-22 11:29:27,634 - INFO - ProjectLogger - Labels transformed to numerical: ['10-26-26' '14-35-14' '17-17-17' '20-20' '28-28' 'DAP' 'Urea']
+2025-10-22 11:29:27,640 - INFO - ProjectLogger - Created feature 'NPK_Ratio' using formula: Nitrogen / (Phosphorous + Potassium + 1e-5)
+2025-10-22 11:29:27,643 - INFO - ProjectLogger - Created feature 'Moisture_Humidity_Diff' using formula: Moisture - Humidity
+2025-10-22 11:29:27,643 - INFO - ProjectLogger - Train columns after feature engineering: ['id', 'Temparature', 'Humidity', 'Moisture', 'Soil Type', 'Crop Type', 'Nitrogen', 'Potassium', 'Phosphorous', 'Fertilizer Name', 'NPK_Ratio', 'Moisture_Humidity_Diff']
+2025-10-22 11:29:27,643 - INFO - ProjectLogger - Validation columns after feature engineering: ['id', 'Temparature', 'Humidity', 'Moisture', 'Soil Type', 'Crop Type', 'Nitrogen', 'Potassium', 'Phosphorous', 'Fertilizer Name', 'NPK_Ratio', 'Moisture_Humidity_Diff']
+2025-10-22 11:29:27,643 - INFO - ProjectLogger - Starting model training and hyperparameter exploration cycle.
+2025-10-22 11:29:27,643 - INFO - ProjectLogger - --- Processing model: RandomForestClassifier ---
+2025-10-22 11:29:27,644 - INFO - ProjectLogger - Generated 1 hyperparameter combination(s) for RandomForestClassifier.
+2025-10-22 11:29:27,644 - INFO - ProjectLogger - Starting run: RandomForestClassifier_Run_1 with HPs: {'n_estimators': 200, 'max_depth': 12, 'min_samples_leaf': 5, 'class_weight': 'balanced'}
+2025-10-22 11:29:27,777 - INFO - ProjectLogger - Train Accuracy: 0.9125 | Validation Accuracy: 0.1500
+2025-10-22 11:29:27,777 - INFO - ProjectLogger - --- Processing model: LogisticRegression ---
+2025-10-22 11:29:27,777 - INFO - ProjectLogger - Generated 1 hyperparameter combination(s) for LogisticRegression.
+2025-10-22 11:29:27,777 - INFO - ProjectLogger - Starting run: LogisticRegression_Run_1 with HPs: {'penalty': 'l2', 'C': 1.0, 'solver': 'saga', 'max_iter': 500, 'class_weight': 'balanced'}
+2025-10-22 11:29:27,806 - INFO - ProjectLogger - Train Accuracy: 0.1250 | Validation Accuracy: 0.1000
+2025-10-22 11:29:27,806 - INFO - ProjectLogger - --- Processing model: XGBoostClassifier ---
+2025-10-22 11:29:27,807 - INFO - ProjectLogger - Generated 4 hyperparameter combination(s) for XGBoostClassifier.
+2025-10-22 11:29:27,807 - INFO - ProjectLogger - Starting run: XGBoostClassifier_Run_1 with HPs: {'n_estimators': 100, 'objective': 'multi:softprob', 'max_depth': 5, 'learning_rate': 0.1}
+2025-10-22 11:29:28,063 - INFO - ProjectLogger - Train Accuracy: 1.0000 | Validation Accuracy: 0.1500
+2025-10-22 11:29:28,064 - INFO - ProjectLogger - Starting run: XGBoostClassifier_Run_2 with HPs: {'n_estimators': 100, 'objective': 'multi:softprob', 'max_depth': 5, 'learning_rate': 0.2}
+2025-10-22 11:29:28,273 - INFO - ProjectLogger - Train Accuracy: 1.0000 | Validation Accuracy: 0.1000
+2025-10-22 11:29:28,273 - INFO - ProjectLogger - Starting run: XGBoostClassifier_Run_3 with HPs: {'n_estimators': 100, 'objective': 'multi:softprob', 'max_depth': 7, 'learning_rate': 0.1}
+2025-10-22 11:29:28,417 - INFO - ProjectLogger - Train Accuracy: 1.0000 | Validation Accuracy: 0.1000
+2025-10-22 11:29:28,417 - INFO - ProjectLogger - Starting run: XGBoostClassifier_Run_4 with HPs: {'n_estimators': 100, 'objective': 'multi:softprob', 'max_depth': 7, 'learning_rate': 0.2}
+2025-10-22 11:29:28,498 - INFO - ProjectLogger - Train Accuracy: 1.0000 | Validation Accuracy: 0.1000
+2025-10-22 11:29:28,498 - INFO - ProjectLogger - --- All experiments finished. Best run: RandomForestClassifier_Run_1 (Accuracy: 0.1500) ---
+2025-10-22 11:29:28,499 - INFO - ProjectLogger - Pipeline execution completed successfully.
+2025-10-22 11:29:28,499 - INFO - ProjectLogger - Pipeline finished successfully. Best run ID: Placeholder_RunID_RandomForestClassifier_Run_1
+2025-10-22 11:34:40,177 - INFO - ProjectLogger - --- MLOps Pipeline Start ---
+2025-10-22 11:34:40,177 - INFO - ProjectLogger - Initialized Experiment Runner for environment: dev
+2025-10-22 11:34:40,177 - INFO - ProjectLogger - Starting MLOps experiment pipeline orchestration.
+2025-10-22 11:34:40,178 - INFO - ProjectLogger - Loading data from configured source: local
+2025-10-22 11:34:40,183 - INFO - ProjectLogger - Splitting data into training and validation sets.
+2025-10-22 11:34:40,192 - INFO - ProjectLogger - Train set size: 80, Validation set size: 20
+2025-10-22 11:34:40,192 - INFO - ProjectLogger - Fitting LabelEncoder on training labels (Fertilizer Name).
+2025-10-22 11:34:40,192 - INFO - ProjectLogger - Labels transformed to numerical: ['10-26-26' '14-35-14' '17-17-17' '20-20' '28-28' 'DAP' 'Urea']
+2025-10-22 11:34:40,197 - INFO - ProjectLogger - Created feature 'NPK_Ratio' using formula: Nitrogen / (Phosphorous + Potassium + 1e-5)
+2025-10-22 11:34:40,200 - INFO - ProjectLogger - Created feature 'Moisture_Humidity_Diff' using formula: Moisture - Humidity
+2025-10-22 11:34:40,200 - INFO - ProjectLogger - Features successfully applied this run: ['NPK_Ratio', 'Moisture_Humidity_Diff']
+2025-10-22 11:34:40,200 - INFO - ProjectLogger - Applied features (pipeline): ['NPK_Ratio', 'Moisture_Humidity_Diff']
+2025-10-22 11:34:40,200 - INFO - ProjectLogger - Starting model training and hyperparameter exploration cycle.
+2025-10-22 11:34:40,201 - INFO - ProjectLogger - --- Processing model: RandomForestClassifier ---
+2025-10-22 11:34:40,201 - INFO - ProjectLogger - Generated 1 hyperparameter combination(s) for RandomForestClassifier.
+2025-10-22 11:34:40,201 - INFO - ProjectLogger - Starting run: RandomForestClassifier_Run_1 with HPs: {'n_estimators': 200, 'max_depth': 12, 'min_samples_leaf': 5, 'class_weight': 'balanced'}
+2025-10-22 11:34:40,336 - INFO - ProjectLogger - Train Accuracy: 0.9125 | Validation Accuracy: 0.1500
+2025-10-22 11:34:40,336 - INFO - ProjectLogger - --- Processing model: LogisticRegression ---
+2025-10-22 11:34:40,336 - INFO - ProjectLogger - Generated 1 hyperparameter combination(s) for LogisticRegression.
+2025-10-22 11:34:40,337 - INFO - ProjectLogger - Starting run: LogisticRegression_Run_1 with HPs: {'penalty': 'l2', 'C': 1.0, 'solver': 'saga', 'max_iter': 500, 'class_weight': 'balanced'}
+2025-10-22 11:34:40,366 - INFO - ProjectLogger - Train Accuracy: 0.1250 | Validation Accuracy: 0.1000
+2025-10-22 11:34:40,366 - INFO - ProjectLogger - --- Processing model: XGBoostClassifier ---
+2025-10-22 11:34:40,367 - INFO - ProjectLogger - Generated 4 hyperparameter combination(s) for XGBoostClassifier.
+2025-10-22 11:34:40,367 - INFO - ProjectLogger - Starting run: XGBoostClassifier_Run_1 with HPs: {'n_estimators': 100, 'objective': 'multi:softprob', 'max_depth': 5, 'learning_rate': 0.1}
+2025-10-22 11:34:40,635 - INFO - ProjectLogger - Train Accuracy: 1.0000 | Validation Accuracy: 0.1500
+2025-10-22 11:34:40,636 - INFO - ProjectLogger - Starting run: XGBoostClassifier_Run_2 with HPs: {'n_estimators': 100, 'objective': 'multi:softprob', 'max_depth': 5, 'learning_rate': 0.2}
+2025-10-22 11:34:40,789 - INFO - ProjectLogger - Train Accuracy: 1.0000 | Validation Accuracy: 0.1000
+2025-10-22 11:34:40,789 - INFO - ProjectLogger - Starting run: XGBoostClassifier_Run_3 with HPs: {'n_estimators': 100, 'objective': 'multi:softprob', 'max_depth': 7, 'learning_rate': 0.1}
+2025-10-22 11:34:40,912 - INFO - ProjectLogger - Train Accuracy: 1.0000 | Validation Accuracy: 0.1000
+2025-10-22 11:34:40,913 - INFO - ProjectLogger - Starting run: XGBoostClassifier_Run_4 with HPs: {'n_estimators': 100, 'objective': 'multi:softprob', 'max_depth': 7, 'learning_rate': 0.2}
+2025-10-22 11:34:40,992 - INFO - ProjectLogger - Train Accuracy: 1.0000 | Validation Accuracy: 0.1000
+2025-10-22 11:34:40,992 - INFO - ProjectLogger - --- All experiments finished. Best run: RandomForestClassifier_Run_1 (Accuracy: 0.1500) ---
+2025-10-22 11:34:40,993 - INFO - ProjectLogger - Pipeline execution completed successfully.
+2025-10-22 11:34:40,993 - INFO - ProjectLogger - Pipeline finished successfully. Best run ID: Placeholder_RunID_RandomForestClassifier_Run_1
+2025-10-22 12:06:24,213 - INFO - ProjectLogger - --- MLOps Pipeline Start ---
+2025-10-22 12:06:24,213 - INFO - ProjectLogger - Initialized Experiment Runner for environment: dev
+2025-10-22 12:06:24,213 - INFO - ProjectLogger - Starting MLOps experiment pipeline orchestration.
+2025-10-22 12:06:24,213 - INFO - ProjectLogger - Loading data from configured source: local
+2025-10-22 12:06:24,219 - INFO - ProjectLogger - Splitting data into training and validation sets.
+2025-10-22 12:06:24,224 - INFO - ProjectLogger - Train set size: 80, Validation set size: 20
+2025-10-22 12:06:24,225 - INFO - ProjectLogger - Fitting LabelEncoder on training labels (Fertilizer Name).
+2025-10-22 12:06:24,225 - INFO - ProjectLogger - Labels transformed to numerical: ['10-26-26' '14-35-14' '17-17-17' '20-20' '28-28' 'DAP' 'Urea']
+2025-10-22 12:06:24,231 - INFO - ProjectLogger - Created numeric feature 'NPK_Ratio' using formula: Nitrogen / (Phosphorous + Potassium + 1e-5)
+2025-10-22 12:06:24,234 - INFO - ProjectLogger - Created numeric feature 'Moisture_Humidity_Diff' using formula: Moisture - Humidity
+2025-10-22 12:06:24,237 - INFO - ProjectLogger - Created numeric feature 'Moisture_Temp_Humidity_Interaction' using formula: Moisture * Temparature * Humidity
+2025-10-22 12:06:24,237 - INFO - ProjectLogger - Numeric features successfully applied this run: ['NPK_Ratio', 'Moisture_Humidity_Diff', 'Moisture_Temp_Humidity_Interaction']
+2025-10-22 12:06:24,237 - INFO - ProjectLogger - Applied features (pipeline): ['NPK_Ratio', 'Moisture_Humidity_Diff', 'Moisture_Temp_Humidity_Interaction']
+2025-10-22 12:06:24,237 - INFO - ProjectLogger - Starting model training and hyperparameter exploration cycle.
+2025-10-22 12:06:24,238 - INFO - ProjectLogger - --- Processing model: RandomForestClassifier ---
+2025-10-22 12:06:24,238 - INFO - ProjectLogger - Generated 1 hyperparameter combination(s) for RandomForestClassifier.
+2025-10-22 12:06:24,238 - INFO - ProjectLogger - Starting run: RandomForestClassifier_Run_1 with HPs: {'n_estimators': 200, 'max_depth': 12, 'min_samples_leaf': 5, 'class_weight': 'balanced'}
+2025-10-22 12:06:24,376 - INFO - ProjectLogger - Train Accuracy: 0.9000 | Validation Accuracy: 0.1500
+2025-10-22 12:06:24,376 - INFO - ProjectLogger - --- Processing model: LogisticRegression ---
+2025-10-22 12:06:24,376 - INFO - ProjectLogger - Generated 1 hyperparameter combination(s) for LogisticRegression.
+2025-10-22 12:06:24,376 - INFO - ProjectLogger - Starting run: LogisticRegression_Run_1 with HPs: {'penalty': 'l2', 'C': 1.0, 'solver': 'saga', 'max_iter': 500, 'class_weight': 'balanced'}
+2025-10-22 12:06:24,390 - INFO - ProjectLogger - Train Accuracy: 0.1625 | Validation Accuracy: 0.1500
+2025-10-22 12:06:24,390 - INFO - ProjectLogger - --- Processing model: XGBoostClassifier ---
+2025-10-22 12:06:24,390 - INFO - ProjectLogger - Generated 4 hyperparameter combination(s) for XGBoostClassifier.
+2025-10-22 12:06:24,390 - INFO - ProjectLogger - Starting run: XGBoostClassifier_Run_1 with HPs: {'n_estimators': 100, 'objective': 'multi:softprob', 'max_depth': 5, 'learning_rate': 0.1}
+2025-10-22 12:06:24,649 - INFO - ProjectLogger - Train Accuracy: 1.0000 | Validation Accuracy: 0.1000
+2025-10-22 12:06:24,649 - INFO - ProjectLogger - Starting run: XGBoostClassifier_Run_2 with HPs: {'n_estimators': 100, 'objective': 'multi:softprob', 'max_depth': 5, 'learning_rate': 0.2}
+2025-10-22 12:06:24,733 - INFO - ProjectLogger - Train Accuracy: 1.0000 | Validation Accuracy: 0.1500
+2025-10-22 12:06:24,733 - INFO - ProjectLogger - Starting run: XGBoostClassifier_Run_3 with HPs: {'n_estimators': 100, 'objective': 'multi:softprob', 'max_depth': 7, 'learning_rate': 0.1}
+2025-10-22 12:06:24,844 - INFO - ProjectLogger - Train Accuracy: 1.0000 | Validation Accuracy: 0.1500
+2025-10-22 12:06:24,845 - INFO - ProjectLogger - Starting run: XGBoostClassifier_Run_4 with HPs: {'n_estimators': 100, 'objective': 'multi:softprob', 'max_depth': 7, 'learning_rate': 0.2}
+2025-10-22 12:06:24,934 - INFO - ProjectLogger - Train Accuracy: 1.0000 | Validation Accuracy: 0.1000
+2025-10-22 12:06:24,934 - INFO - ProjectLogger - --- All experiments finished. Best run: RandomForestClassifier_Run_1 (Accuracy: 0.1500) ---
+2025-10-22 12:06:24,935 - INFO - ProjectLogger - Pipeline execution completed successfully.
+2025-10-22 12:06:24,935 - INFO - ProjectLogger - Pipeline finished successfully. Best run ID: Placeholder_RunID_RandomForestClassifier_Run_1
+2025-10-22 12:13:02,502 - INFO - ProjectLogger - --- MLOps Pipeline Start ---
+2025-10-22 12:13:02,503 - INFO - ProjectLogger - Initialized Experiment Runner for environment: dev
+2025-10-22 12:13:02,503 - INFO - ProjectLogger - Starting MLOps experiment pipeline orchestration.
+2025-10-22 12:13:02,503 - INFO - ProjectLogger - Loading data from configured source: local
+2025-10-22 12:13:02,871 - INFO - ProjectLogger - Splitting data into training and validation sets.
+2025-10-22 12:13:03,575 - INFO - ProjectLogger - Train set size: 600000, Validation set size: 150000
+2025-10-22 12:13:03,576 - INFO - ProjectLogger - Fitting LabelEncoder on training labels (Fertilizer Name).
+2025-10-22 12:13:03,650 - INFO - ProjectLogger - Labels transformed to numerical: ['10-26-26' '14-35-14' '17-17-17' '20-20' '28-28' 'DAP' 'Urea']
+2025-10-22 12:13:03,661 - INFO - ProjectLogger - Created numeric feature 'NPK_Ratio' using formula: Nitrogen / (Phosphorous + Potassium + 1e-5)
+2025-10-22 12:13:03,665 - INFO - ProjectLogger - Created numeric feature 'Moisture_Humidity_Diff' using formula: Moisture - Humidity
+2025-10-22 12:13:03,670 - INFO - ProjectLogger - Created numeric feature 'Moisture_Temp_Humidity_Interaction' using formula: Moisture * Temparature * Humidity
+2025-10-22 12:13:03,670 - INFO - ProjectLogger - Numeric features successfully applied this run: ['NPK_Ratio', 'Moisture_Humidity_Diff', 'Moisture_Temp_Humidity_Interaction']
+2025-10-22 12:13:03,670 - INFO - ProjectLogger - Applied features (pipeline): ['NPK_Ratio', 'Moisture_Humidity_Diff', 'Moisture_Temp_Humidity_Interaction']
+2025-10-22 12:13:03,670 - INFO - ProjectLogger - Starting model training and hyperparameter exploration cycle.
+2025-10-22 12:13:03,680 - INFO - ProjectLogger - --- Processing model: RandomForestClassifier ---
+2025-10-22 12:13:03,681 - INFO - ProjectLogger - Generated 1 hyperparameter combination(s) for RandomForestClassifier.
+2025-10-22 12:13:03,681 - INFO - ProjectLogger - Starting run: RandomForestClassifier_Run_1 with HPs: {'n_estimators': 200, 'max_depth': 12, 'min_samples_leaf': 5, 'class_weight': 'balanced'}
+2025-10-22 12:14:58,139 - INFO - ProjectLogger - Train Accuracy: 0.2899 | Validation Accuracy: 0.1645
+2025-10-22 12:14:58,140 - INFO - ProjectLogger - --- Processing model: LogisticRegression ---
+2025-10-22 12:14:58,140 - INFO - ProjectLogger - Generated 1 hyperparameter combination(s) for LogisticRegression.
+2025-10-22 12:14:58,140 - INFO - ProjectLogger - Starting run: LogisticRegression_Run_1 with HPs: {'penalty': 'l2', 'C': 1.0, 'solver': 'saga', 'max_iter': 500, 'class_weight': 'balanced'}
+2025-10-22 12:19:00,156 - INFO - ProjectLogger - Train Accuracy: 0.1479 | Validation Accuracy: 0.1479
+2025-10-22 12:19:00,158 - INFO - ProjectLogger - --- Processing model: XGBoostClassifier ---
+2025-10-22 12:19:00,158 - INFO - ProjectLogger - Generated 4 hyperparameter combination(s) for XGBoostClassifier.
+2025-10-22 12:19:00,158 - INFO - ProjectLogger - Starting run: XGBoostClassifier_Run_1 with HPs: {'n_estimators': 100, 'objective': 'multi:softprob', 'max_depth': 5, 'learning_rate': 0.1}
+2025-10-22 12:19:12,029 - INFO - ProjectLogger - Train Accuracy: 0.2031 | Validation Accuracy: 0.1822
+2025-10-22 12:19:12,030 - INFO - ProjectLogger - Starting run: XGBoostClassifier_Run_2 with HPs: {'n_estimators': 100, 'objective': 'multi:softprob', 'max_depth': 5, 'learning_rate': 0.2}
+2025-10-22 12:19:23,887 - INFO - ProjectLogger - Train Accuracy: 0.2187 | Validation Accuracy: 0.1870
+2025-10-22 12:19:23,887 - INFO - ProjectLogger - Starting run: XGBoostClassifier_Run_3 with HPs: {'n_estimators': 100, 'objective': 'multi:softprob', 'max_depth': 7, 'learning_rate': 0.1}
+2025-10-22 12:19:36,499 - INFO - ProjectLogger - Train Accuracy: 0.2536 | Validation Accuracy: 0.1863
+2025-10-22 12:19:36,499 - INFO - ProjectLogger - Starting run: XGBoostClassifier_Run_4 with HPs: {'n_estimators': 100, 'objective': 'multi:softprob', 'max_depth': 7, 'learning_rate': 0.2}
+2025-10-22 12:19:49,338 - INFO - ProjectLogger - Train Accuracy: 0.2912 | Validation Accuracy: 0.1887
+2025-10-22 12:19:49,338 - INFO - ProjectLogger - --- All experiments finished. Best run: XGBoostClassifier_Run_4 (Accuracy: 0.1887) ---
+2025-10-22 12:19:49,345 - INFO - ProjectLogger - Pipeline execution completed successfully.
+2025-10-22 12:19:49,361 - INFO - ProjectLogger - Pipeline finished successfully. Best run ID: Placeholder_RunID_XGBoostClassifier_Run_4

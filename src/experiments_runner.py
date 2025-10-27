@@ -15,6 +15,8 @@ from src.data_splitter import split_data
 from src.model_utils import get_model_class,  get_hyperparameter_combinations
 from src.preprocessor import create_preprocessor
 from src.utils import logger
+from itertools import combinations
+
 
 class ExperimentRunner:
     """
@@ -39,8 +41,37 @@ class ExperimentRunner:
         return data
 
     def preprocess_and_feature_engineer(self, df_train: pd.DataFrame, df_val: pd.DataFrame):
-        """Placeholder for feature engineering on split sets."""
-        pass # To be implemented later
+        """Stage 3: Feature engineering driven by config."""
+        fe_cfg = getattr(self.config, "feature_engineering", None)
+        if not fe_cfg or not getattr(fe_cfg, "enable", False):
+            logger.info("Feature engineering disabled via config.")
+            return df_train, df_val
+
+        applied_features = []
+
+        operations = getattr(fe_cfg, "operations", []) or []
+        if not operations:
+            logger.info("No feature engineering operations defined in config.")
+            return df_train, df_val
+
+        for op in operations:
+            output_col = op.output
+            formula = op.formula
+            if not output_col or not formula:
+                logger.warning(f"Skipping invalid feature operation (missing output/formula): {op}")
+                continue
+
+            try:
+                df_train[output_col] = df_train.eval(formula)
+                df_val[output_col] = df_val.eval(formula)
+                applied_features.append(output_col)  # <-- track the feature
+                logger.info(f"Created numeric feature '{output_col}' using formula: {formula}")
+            except Exception as e:
+                logger.warning(f"Failed to create numeric feature '{output_col}': {e}")
+
+        logger.info(f"Numeric features successfully applied this run: {applied_features}") #<-- print
+
+        return df_train, df_val, applied_features
 
     def _transform_labels(self, df_train: pd.DataFrame, df_val: pd.DataFrame) -> Tuple[pd.DataFrame, pd.DataFrame]:
         """
@@ -127,17 +158,22 @@ class ExperimentRunner:
                 # Training
                 full_pipeline.fit(X_train, y_train)
 
-                # Evaluation on Validation Set
+                # Compute Training Accuracy
+                y_pred_train = full_pipeline.predict(X_train)
+                train_acc = accuracy_score(y_train, y_pred_train)
+
+                # Compute Validation Accuracy
                 y_pred_val = full_pipeline.predict(X_val)
-                accuracy = accuracy_score(y_val, y_pred_val)
-                logger.info(f"Validation Accuracy: {accuracy:.4f}")
+                val_acc = accuracy_score(y_val, y_pred_val)
+
+                logger.info(f"Train Accuracy: {train_acc:.4f} | Validation Accuracy: {val_acc:.4f}")
 
                 # Store Results and Track Best Model
                 # NOTE: In MLFlow you will log model_name, hyperparams, and metrics for this run
-                results[run_name] = {"accuracy": accuracy, "model": full_pipeline}
-                
-                if accuracy > best_accuracy:
-                    best_accuracy = accuracy
+
+                results[run_name] = {"train_accuracy": train_acc, "val_accuracy": val_acc, "model": full_pipeline}
+                if val_acc > best_accuracy:
+                    best_accuracy = val_acc
                     best_run_name = run_name
 
         logger.info(f"--- All experiments finished. Best run: {best_run_name} (Accuracy: {best_accuracy:.4f}) ---")
@@ -165,6 +201,8 @@ class ExperimentRunner:
             
             # Preprocess and Train (The Core Experimentation)
             # Calls the method that loops through models, preprocesses, trains, and evaluates
+            df_train, df_val, applied_features = self.preprocess_and_feature_engineer(df_train, df_val)
+            logger.info(f"Applied features (pipeline): {applied_features}") # <-- can replace with MLflow integration
             best_run_id = self.run_tuning_and_training(df_train, df_val)
             
             logger.info("Pipeline execution completed successfully.")

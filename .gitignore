@@ -1,6 +1,7 @@
 # Ignore data files
 data/*.csv
 data/*.parquet
+!data/dataset_small.csv
 
 # Ignore Jupyter checkpoints
 notebooks/.ipynb_checkpoints/
