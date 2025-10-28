@@ -1,6 +1,7 @@
-pandas==2.2.2
-PyYAML==6.0.1
-scikit-learn==1.4.2
+pandas==2.3.3
+PyYAML==6.0.3
+scikit-learn==1.7.2
 pytest==8.4.2
-xgboost==2.0.3
 gdown==5.2.0
+xgboost==3.1.0
+mlflow==3.5.0

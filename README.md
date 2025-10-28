@@ -33,6 +33,9 @@ source .venv/bin/activate
 # Install all listed packages and their exact versions
 pip install -r requirements.txt
 
+# Start local web server to view local experiments in MLFlow UI
+mlflow ui
+
 ## Team
 Arkojit Ghosh 
 Yu-Hua Chen
