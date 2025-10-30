@@ -2,7 +2,6 @@ import pandas as pd
 from enum import Enum
 from pathlib import Path
 from typing import Literal
-from pyspark.sql import SparkSession
 
 from .config_manager import DataConfig
 from .utils import logger
@@ -62,10 +61,18 @@ def load_training_data(
         # --- Databricks/Delta Lake Loading Logic will go here ---
         table_path = f"{data_config.catalog_name}.{data_config.schema_name}.{data_config.intermediate_clean_table}"
         print(f"Loading data from Databricks table: {table_path}")
-        
-        spark = SparkSession.builder \
-            .appName("DataLoader") \
-            .getOrCreate()
+        # Import PySpark lazily so local environments without pyspark don't fail on module import
+        try:
+            from pyspark.sql import SparkSession
+        except Exception as e:
+            raise ImportError(
+                "PySpark is required to load data from Databricks but is not installed or failed to import. "
+                "If you are running locally and don't need Spark, set data_source: 'local' in your config. "
+                "To run Databricks integration locally install pyspark (see requirements-spark.txt) or run on Databricks. "
+                f"Original error: {e}"
+            )
+
+        spark = SparkSession.builder.appName("DataLoader").getOrCreate()
 
         table = spark.table(table_path)
 
