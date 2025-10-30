@@ -103,6 +103,12 @@ def test_databricks_loading_success(data_loader_setup):
     """
     mock_config, df_expected = data_loader_setup
     
+    # Skip this test when pyspark or Java runtime is not available in the environment
+    pyspark = pytest.importorskip("pyspark")
+    import shutil
+    if shutil.which("java") is None:
+        pytest.skip("Java runtime not found; skipping Databricks/Spark integration test")
+
     # Get or create Spark session
     spark = SparkSession.builder.getOrCreate()
     

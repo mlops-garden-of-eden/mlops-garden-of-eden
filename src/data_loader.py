@@ -2,10 +2,10 @@ import pandas as pd
 from enum import Enum
 from pathlib import Path
 from typing import Literal
-from pyspark.sql import SparkSession
 
 from .config_manager import DataConfig
 from .utils import logger
+import warnings
 
 class DataSource(Enum):
     """Defines the available data sources for the pipeline."""
@@ -35,7 +35,25 @@ def load_training_data(
         if not local_path.exists():
             raise FileNotFoundError(f"Local training data file not found at: {local_path}")
             
-        df = pd.read_csv(local_path).reset_index(drop=True)
+        df = pd.read_csv(local_path)
+
+        # Apply optional renaming mapping supplied in the config
+        rename_map = getattr(data_config, "rename_columns", {}) or {}
+        if rename_map:
+            # Check for duplicates after rename
+            projected = [rename_map.get(c, c) for c in df.columns]
+            if len(set(projected)) != len(projected):
+                raise ValueError("Column rename mapping would create duplicate column names")
+
+            # Warn for keys not present
+            missing = [k for k in rename_map.keys() if k not in df.columns]
+            if missing:
+                logger.warning(f"rename_columns contains keys not found in CSV: {missing}")
+
+            # Only rename keys that exist in dataframe
+            df = df.rename(columns={k: v for k, v in rename_map.items() if k in df.columns})
+
+        df = df.reset_index(drop=True)
         print(f"Successfully loaded {len(df)} rows from local path.")
         return df
 
@@ -43,12 +61,37 @@ def load_training_data(
         # --- Databricks/Delta Lake Loading Logic will go here ---
         table_path = f"{data_config.catalog_name}.{data_config.schema_name}.{data_config.intermediate_clean_table}"
         print(f"Loading data from Databricks table: {table_path}")
-        
-        spark = SparkSession.builder \
-            .appName("DataLoader") \
-            .getOrCreate()
+        # Import PySpark lazily so local environments without pyspark don't fail on module import
+        try:
+            from pyspark.sql import SparkSession
+        except Exception as e:
+            raise ImportError(
+                "PySpark is required to load data from Databricks but is not installed or failed to import. "
+                "If you are running locally and don't need Spark, set data_source: 'local' in your config. "
+                "To run Databricks integration locally install pyspark (see requirements-spark.txt) or run on Databricks. "
+                f"Original error: {e}"
+            )
+
+        spark = SparkSession.builder.appName("DataLoader").getOrCreate()
 
         table = spark.table(table_path)
+
+        # Apply optional renaming mapping in Spark before converting to pandas
+        rename_map = getattr(data_config, "rename_columns", {}) or {}
+        if rename_map:
+            # Check for duplicates after rename using Spark table column list
+            spark_cols = table.columns
+            projected = [rename_map.get(c, c) for c in spark_cols]
+            if len(set(projected)) != len(projected):
+                raise ValueError("Column rename mapping would create duplicate column names (Databricks)")
+
+            for old, new in rename_map.items():
+                if old in spark_cols:
+                    if old != new:
+                        table = table.withColumnRenamed(old, new)
+                else:
+                    logger.warning(f"rename_columns contains key not found in Databricks table: {old}")
+
         df = table.toPandas().reset_index(drop=True)
 
         print(f"Successfully loaded {len(df)} rows from Databricks table.")

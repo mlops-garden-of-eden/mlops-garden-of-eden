@@ -24,8 +24,20 @@ data:
   local_raw_path: "data/train.csv"
 
   # Path to local training data
-  local_train_data_path: "data/dataset_initial.csv"
+  local_train_data_path: "data/dataset_small.csv"
   local_test_data_path: "data/test_set.csv"
+
+  # Optional mapping to rename incoming columns (old_name: new_name)
+  rename_columns:
+    "Temparature": "temperature"
+    "Humidity": "humidity"
+    "Moisture": "moisture"
+    "Nitrogen": "nitrogen"
+    "Potassium": "potassium"
+    "Phosphorous": "phosphorous"
+    "Soil Type": "soil_type"
+    "Crop Type": "crop_type"
+    "Fertilizer Name": "fertilizer_name"
 
   meta_features:
     - "id"

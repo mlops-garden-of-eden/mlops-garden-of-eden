@@ -16,6 +16,13 @@ Purpose: Ingest and process raw fertilizer prediction data, loading it into Data
 # Verify imports work properly
 
 import os
+import shutil
+import pytest
+
+# Skip execution in environments without pyspark or Java available
+pytest.importorskip("pyspark")
+if shutil.which("java") is None:
+	pytest.skip("Java runtime not found; skipping Databricks notebook test.", allow_module_level=True)
 
 # Get current notebook's directory
 notebook_dir = os.path.dirname(os.path.realpath(__file__)) if '__file__' in dir() else os.getcwd()

@@ -2,22 +2,34 @@ import os
 import sys
 import shutil
 import pytest
+from pathlib import Path
+import tempfile
 
-# Remove the tmp dir, if it is there
-if os.path.exists('/tmp/mlops-garden-of-eden'):
-    shutil.rmtree('/tmp/mlops-garden-of-eden', ignore_errors=True)
+# Make the script portable: copy the current repository root into a temporary
+# directory for isolation. Prefer system temp dir (usually writable) and
+# gracefully fall back to a directory under the user's home if creation fails.
+repo_root = Path(__file__).resolve().parent
 
-# Copy to /tmp to avoid cache issues
-shutil.copytree(
-    '/Workspace/Users/chenjoachim@cs.toronto.edu/mlops-garden-of-eden',
-    '/tmp/mlops-garden-of-eden',
-    dirs_exist_ok=True
-)
+# Create a writable temp directory
+try:
+    tmp_dir = Path(tempfile.mkdtemp(prefix="mlops-garden-of-eden-"))
+except Exception:
+    # Fallback to a directory under the user's home
+    home = Path.home()
+    tmp_dir = home / "mlops-garden-of-eden-tmp"
+    tmp_dir.mkdir(parents=True, exist_ok=True)
 
-os.chdir('/tmp/mlops-garden-of-eden')
-sys.path.insert(0, '/tmp/mlops-garden-of-eden')
+# Copy repository into the temp directory
+try:
+    shutil.copytree(str(repo_root), str(tmp_dir / repo_root.name), dirs_exist_ok=True)
+    target_dir = tmp_dir / repo_root.name
+except PermissionError as e:
+    raise PermissionError(f"Failed to copy repository to temp directory {tmp_dir}: {e}")
 
-# Run pytest
+os.chdir(str(target_dir))
+sys.path.insert(0, str(target_dir))
+
+# Run pytest in the copied tree
 exit_code = pytest.main(['tests/', '-v', '-p', 'no:cacheprovider'])
 
 if exit_code == 0:
