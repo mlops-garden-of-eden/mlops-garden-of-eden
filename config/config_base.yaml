@@ -60,12 +60,12 @@ data:
 feature_engineering:
   enable: true
   operations:
-    - output: "NPK_Ratio"
-      formula: "Nitrogen / (Phosphorous + Potassium + 1e-5)"
-    - output: "Moisture_Humidity_Diff"
-      formula: "Moisture - Humidity"
-    - output: "Moisture_Temp_Humidity_Interaction"
-      formula: "Moisture * Temparature * Humidity"
+    - output: "npk_ratio"
+      formula: "nitrogen / (phosphorous + potassium + 1e-5)"
+    - output: "moisture_humidity_diff"
+      formula: "moisture - Humidity"
+    - output: "moisture_temp_humidity_interaction"
+      formula: "moisture * temperature * humidity"
 
 # --- Tuning/Execution Configuration ---
 tuning:
