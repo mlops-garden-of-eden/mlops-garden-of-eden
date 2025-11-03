@@ -8,7 +8,10 @@ import tempfile
 # Make the script portable: copy the current repository root into a temporary
 # directory for isolation. Prefer system temp dir (usually writable) and
 # gracefully fall back to a directory under the user's home if creation fails.
-repo_root = Path(__file__).resolve().parent
+try:
+    repo_root = Path(__file__).resolve().parent
+except NameError:
+    repo_root = Path.cwd().resolve()
 
 # Create a writable temp directory
 try:

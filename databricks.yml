@@ -1,0 +1,13 @@
+bundle:
+  name: mlops-garden-of-eden
+
+include:
+  - jobs/*.yml
+
+targets:
+  dev:
+    mode: development
+    default: true
+  
+  prod:
+    mode: production
