@@ -13,6 +13,20 @@ This project predicts up to three optimal fertilizers for crops based on soil an
 - EDA: Run notebooks in notebooks/eda.ipynb for initial data exploration.
 - Modeling: Use scripts in src/ for preprocessing, feature engineering, and model training.
 - API: TBD (future deployment pipeline).
+- Testing:
+    - Local test: run `python run_test.py`
+    - Remote test: First install Databricks CLI and configure it:
+        ```bash
+        curl -fsSL https://raw.githubusercontent.com/databricks/setup-cli/main/install.sh | sh
+        export DATABRICKS_HOST=https://dbc-6713e564-9737.cloud.databricks.com
+        export DATABRICKS_TOKEN=<your_token_here>
+        databricks bundle validate
+        databricks bundle deploy
+        ```
+        Then run the test job on Databricks:
+        ```bash
+        databricks bundle run Test
+        ```
 
 ## VENV
 We use a virtual environment (`venv`) to isolate project dependencies.
@@ -36,8 +50,7 @@ pip install -r requirements.txt
 # Start local web server to view local experiments in MLFlow UI
 mlflow ui
 
+```
+
 ## Team
-Arkojit Ghosh 
-Yu-Hua Chen
-David Goh 
-Aliza Tarakanov 
+Arkojit Ghosh, Yu-Hua Chen, David Goh, Aliza Tarakanov

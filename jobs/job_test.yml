@@ -1,0 +1,18 @@
+resources:
+  jobs:
+    Test:
+      name: Test
+      tasks:
+        - task_key: Test
+          spark_python_task:
+            python_file: /Workspace/Shared/mlops-garden-of-eden/run_test.py
+          environment_key: Default
+      queue:
+        enabled: true
+      environments:
+        - environment_key: Default
+          spec:
+            dependencies:
+              - -r /Workspace/Shared/mlops-garden-of-eden/requirements.txt
+            environment_version: "4"
+      performance_target: PERFORMANCE_OPTIMIZED
