@@ -122,11 +122,10 @@ class ExperimentRunner:
         best_accuracy = -1
         best_run_name = ""
 
-        # Create a new MLFlow experiment for the entire set of models being tested
-        mlflow.autolog()
-        iso_timestamp = datetime.now().isoformat()
-        experiment_name = f"{self.config.tracking.experiment_name}/{iso_timestamp}"
+        # Set MLflow experiment explicitly (parent folder must exist in Databricks)
+        experiment_name = self.config.tracking.experiment_name  # e.g., /Users/... or /Shared/...
         mlflow.set_experiment(experiment_name)
+        mlflow.autolog()  # optional: keeps sklearn/xgboost autologging
 
         # Outer Loop: Iterate over all configured models
         for model_name in self.config.tuning.models_to_run:
@@ -150,44 +149,41 @@ class ExperimentRunner:
 
                 # Record each combination of hyperparameter and model as a single MLFlow run within the experiment
                 with mlflow.start_run(run_name=run_name):
-                    # Build Full Pipeline and Instantiate Model
-
-                    # Instantiate the model with the specific combination of hyperparameters
+                    # Instantiate the model
                     classifier = ModelClass(random_state=self.config.random_seed, **hyperparams)
-                # Create the reusable preprocessor
-                numerical_features = self.config.data.features.numerical
-                categorical_features = self.config.data.features.categorical
-                preprocessor = create_preprocessor(numerical_features, categorical_features)
 
-                full_pipeline = Pipeline(steps=[
-                    ('preprocessor', preprocessor),
-                    ('classifier', classifier)
-                ])
+                    # Preprocessor + pipeline
+                    numerical_features = self.config.data.features.numerical
+                    categorical_features = self.config.data.features.categorical
+                    preprocessor = create_preprocessor(numerical_features, categorical_features)
+                    full_pipeline = Pipeline(steps=[('preprocessor', preprocessor), ('classifier', classifier)])
 
-                # Training
-                full_pipeline.fit(X_train, y_train)
+                    # Training
+                    full_pipeline.fit(X_train, y_train)
 
-                # Compute Training Accuracy
-                y_pred_train = full_pipeline.predict(X_train)
-                train_acc = accuracy_score(y_train, y_pred_train)
+                    # Compute metrics
+                    y_pred_train = full_pipeline.predict(X_train)
+                    y_pred_val = full_pipeline.predict(X_val)
+                    train_acc = accuracy_score(y_train, y_pred_train)
+                    val_acc = accuracy_score(y_val, y_pred_val)
 
-                # Compute Validation Accuracy
-                y_pred_val = full_pipeline.predict(X_val)
-                val_acc = accuracy_score(y_val, y_pred_val)
+                    # Log metrics
+                    mlflow.log_metric("train_accuracy", train_acc)
+                    mlflow.log_metric("val_accuracy", val_acc)
 
-                logger.info(f"Train Accuracy: {train_acc:.4f} | Validation Accuracy: {val_acc:.4f}")
+                    # Log model
+                    mlflow.sklearn.log_model(full_pipeline, model_name)
 
-                # Store Results and Track Best Model
-                # NOTE: In MLFlow you will log model_name, hyperparams, and metrics for this run
+                    # Track best model
+                    if val_acc > best_accuracy:
+                        best_accuracy = val_acc
+                        best_run_name = run_name
+
                 results[run_name] = {
                     "train_accuracy": train_acc,
                     "val_accuracy": val_acc,
                     "model": full_pipeline
                 }
-
-                if val_acc > best_accuracy:
-                    best_accuracy = val_acc
-                    best_run_name = run_name
 
         logger.info(f"--- All experiments finished. Best run: {best_run_name} (Accuracy: {best_accuracy:.4f}) ---")
         

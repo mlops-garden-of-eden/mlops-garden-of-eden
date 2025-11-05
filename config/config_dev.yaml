@@ -22,4 +22,4 @@ tuning:
 # --- MLOps/Tracking Configuration ---
 tracking:
   # Use a separate, temporary experiment for all development runs to keep the production experiment clean.
-  experiment_name: "Garden_of_Eden_DEV_SCRATCHPAD"
+  experiment_name: "/Users/daveed@cs.toronto.edu/mlops-garden-of-eden-shared/test_runs"
