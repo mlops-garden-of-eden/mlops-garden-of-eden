@@ -121,14 +121,12 @@ class ExperimentRunner:
 
         best_accuracy = -1
         best_run_id = None
-        best_model_name = None
+        best_model_artifact_name = None
 
         # Create a new MLFlow experiment for the entire set of models being tested
+        mlflow.set_experiment(self.config.tracking.experiment_name)
         mlflow.autolog()
         iso_timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-        experiment_name = f"{self.config.tracking.experiment_name}/{iso_timestamp}"
-        mlflow.set_experiment(experiment_name)
-
         # Outer Loop: Iterate over all configured models
         parent_run_name = f"Experiment_{iso_timestamp}"
         with mlflow.start_run(run_name=parent_run_name) as parent_run:
@@ -177,16 +175,28 @@ class ExperimentRunner:
                     # Compute Validation Accuracy
                     y_pred_val = full_pipeline.predict(X_val)
                     val_acc = accuracy_score(y_val, y_pred_val)
-                    mlflow.sklearn.log_model(full_pipeline, artifact_path="model")
+                    mlflow.log_metric("train_accuracy", train_acc)
+                    mlflow.log_metric("val_accuracy", val_acc)
+                    
+                    train_preds = full_pipeline.predict(X_train)
+                    signature = infer_signature(X_train, train_preds)
+
+                    # Log the model with signature and input example
+                    mlflow.sklearn.log_model(
+                        sk_model=full_pipeline,
+                        artifact_path=model_name,
+                        signature=signature,
+                        input_example=X_train.head(5)  # optional example
+                        )
 
                     if val_acc > best_accuracy:
                             best_accuracy = val_acc
                             best_run_id = child_run.info.run_id
-                            best_model_artifact = "model"
+                            best_model_artifact_name = model_name
 
         # Register best model
-        if best_run_id and best_model_artifact:
-            model_uri = f"runs:/{best_run_id}/{best_model_artifact}"
+        if best_run_id and best_model_artifact_name:
+            model_uri = f"runs:/{best_run_id}/{best_model_artifact_name}"
             registered_model = mlflow.register_model(model_uri, "BestFertilizerModel")
 
             client = mlflow.tracking.MlflowClient()
