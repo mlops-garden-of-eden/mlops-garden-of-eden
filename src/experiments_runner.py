@@ -200,8 +200,8 @@ class ExperimentRunner:
             registered_model = mlflow.register_model(model_uri, "BestFertilizerModel")
 
             client = mlflow.tracking.MlflowClient()
-            client.set_tag(registered_model.name, "best_val_accuracy", str(best_accuracy))
-            client.set_tag(registered_model.name, "timestamp", iso_timestamp)
+            client.set_tag(best_run_id, "best_val_accuracy", str(best_accuracy))
+            client.set_tag(best_run_id, "timestamp", iso_timestamp)
 
         logger.info(f"--- All experiments finished. Best run: {best_run_id} (Accuracy: {best_accuracy:.4f}) ---")
         
