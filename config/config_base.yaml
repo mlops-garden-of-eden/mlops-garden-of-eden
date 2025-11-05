@@ -110,7 +110,7 @@ models:
 # --- MLOps/Tracking Configuration ---
 tracking:
   # The name used for MLflow experiment tracking. Note that on DataBricks this should be resolved as a path
-  experiment_name: "/Shared/Fertilizer_Classification_V1"
+  experiment_name: "/Workspace/Shared/mlops-garden-of-eden-experiments"
   mlflow_tracking_uri: "databricks" # Standard URI for Databricks environment integration.
 
   # Logging parameters

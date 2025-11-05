@@ -1,4 +1,4 @@
-id,Temparature,Humidity,Moisture,Soil Type,Crop Type,Nitrogen,Potassium,Phosphorous,Fertilizer Name
+id,temperature,humidity,moisture,soil_type,crop_type,nitrogen,potassium,phosphorous,fertilizer_name
 404846,30,72,51,Sandy,Oil seeds,42,9,30,17-17-17
 580313,36,57,48,Loamy,Cotton,19,11,20,14-35-14
 552086,29,67,60,Sandy,Paddy,28,13,30,10-26-26
