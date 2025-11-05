@@ -110,7 +110,7 @@ models:
 # --- MLOps/Tracking Configuration ---
 tracking:
   # The name used for MLflow experiment tracking. Note that on DataBricks this should be resolved as a path
-  experiment_name: "/Users/daveed@cs.toronto.edu/mlops-garden-of-eden-shared/test_runs"
+  experiment_name: "/Workspace/Users/daveed@cs.toronto.edu/mlops-garden-of-eden-shared/test_runs"
   mlflow_tracking_uri: "databricks" # Standard URI for Databricks environment integration.
 
   # Logging parameters
