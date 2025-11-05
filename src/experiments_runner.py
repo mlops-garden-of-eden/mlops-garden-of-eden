@@ -123,17 +123,20 @@ class ExperimentRunner:
         best_run_id = None
         best_model_name = None
 
-        mlflow.set_experiment(self.config.tracking.experiment_name)
+        # Create a new MLFlow experiment for the entire set of models being tested
         mlflow.autolog()
-
         iso_timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-        parent_run_name = f"Experiment_{iso_timestamp}"
+        experiment_name = f"{self.config.tracking.experiment_name}/{iso_timestamp}"
+        mlflow.set_experiment(experiment_name)
 
+        # Outer Loop: Iterate over all configured models
+        parent_run_name = f"Experiment_{iso_timestamp}"
         with mlflow.start_run(run_name=parent_run_name) as parent_run:
             parent_run_id = parent_run.info.run_id
 
             for model_name in self.config.tuning.models_to_run:
                 logger.info(f"--- Processing model: {model_name} ---")
+                
                 try:
                     model_config: ModelConfig = getattr(self.config.models, model_name)
                     ModelClass = get_model_class(model_config.type)
@@ -144,49 +147,54 @@ class ExperimentRunner:
                 hp_combinations = get_hyperparameter_combinations(model_config.hyperparameters)
                 logger.info(f"Generated {len(hp_combinations)} hyperparameter combination(s) for {model_name}.")
 
-                for i, hyperparams in enumerate(hp_combinations):
-                    run_name = f"{model_name}_Run_{i+1}"
-                    logger.info(f"Starting run: {run_name} with HPs: {hyperparams}")
+            # Inner Loop: Iterate over each hyperparameter combination
+            for i, hyperparams in enumerate(hp_combinations):
+                run_name = f"{model_name}_Run_{i + 1}"
+                logger.info(f"Starting run: {run_name} with HPs: {hyperparams}")
 
-                    with mlflow.start_run(run_name=run_name, nested=True, parent_run_id=parent_run_id) as child_run:
-                        classifier = ModelClass(random_state=self.config.random_seed, **hyperparams)
-                        preprocessor = create_preprocessor(
-                            self.config.data.features.numerical,
-                            self.config.data.features.categorical
-                        )
-                        pipeline = Pipeline([
-                            ('preprocessor', preprocessor),
-                            ('classifier', classifier)
-                        ])
-                        pipeline.fit(X_train, y_train)
+                # Record each combination of hyperparameter and model as a single MLFlow run within the experiment
+                with mlflow.start_run(run_name=run_name, nested=True, parent_run_id=parent_run_id) as child_run:
+                       
+                    # Instantiate the model with the specific combination of hyperparameters
+                    classifier = ModelClass(random_state=self.config.random_seed, **hyperparams)
+                    # Create the reusable preprocessor
+                    numerical_features = self.config.data.features.numerical
+                    categorical_features = self.config.data.features.categorical
+                    preprocessor = create_preprocessor(numerical_features, categorical_features)
 
-                        train_acc = accuracy_score(y_train, pipeline.predict(X_train))
-                        val_acc = accuracy_score(y_val, pipeline.predict(X_val))
-                        mlflow.log_metric("train_accuracy", train_acc)
-                        mlflow.log_metric("val_accuracy", val_acc)
+                    full_pipeline = Pipeline(steps=[
+                        ('preprocessor', preprocessor),
+                        ('classifier', classifier)
+                    ])
 
-                        signature = infer_signature(X_train, pipeline.predict(X_train))
-                        mlflow.sklearn.log_model(
-                            sk_model=pipeline,
-                            name=model_name,
-                            signature=signature,
-                            input_example=X_train.head(5)
-                        )
+                    # Training
+                    full_pipeline.fit(X_train, y_train)
 
-                        if val_acc > best_accuracy:
+                    # Compute Training Accuracy
+                    y_pred_train = full_pipeline.predict(X_train)
+                    train_acc = accuracy_score(y_train, y_pred_train)
+
+                    # Compute Validation Accuracy
+                    y_pred_val = full_pipeline.predict(X_val)
+                    val_acc = accuracy_score(y_val, y_pred_val)
+                    mlflow.sklearn.log_model(full_pipeline, artifact_path="model")
+
+                    if val_acc > best_accuracy:
                             best_accuracy = val_acc
                             best_run_id = child_run.info.run_id
-                            best_model_name = model_name
+                            best_model_artifact = "model"
 
-            if best_run_id and best_model_name:
-                model_uri = f"runs:/{best_run_id}/{best_model_name}"
-                registered_model = mlflow.register_model(model_uri, "BestFertilizerModel")
+        # Register best model
+        if best_run_id and best_model_artifact:
+            model_uri = f"runs:/{best_run_id}/{best_model_artifact}"
+            registered_model = mlflow.register_model(model_uri, "BestFertilizerModel")
 
-                client = mlflow.tracking.MlflowClient()
-                client.set_tag(best_run_id, "best_val_accuracy", str(best_accuracy))
-                client.set_tag(best_run_id, "timestamp", iso_timestamp)
+            client = mlflow.tracking.MlflowClient()
+            client.set_tag(registered_model.name, "best_val_accuracy", str(best_accuracy))
+            client.set_tag(registered_model.name, "timestamp", iso_timestamp)
 
         logger.info(f"--- All experiments finished. Best run: {best_run_id} (Accuracy: {best_accuracy:.4f}) ---")
+        
         return best_run_id
 
     def run_experiment_pipeline(self) -> str:
