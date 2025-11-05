@@ -18,6 +18,7 @@ from src.model_utils import get_model_class,  get_hyperparameter_combinations
 from src.preprocessor import create_preprocessor
 from src.utils import logger
 from itertools import combinations
+from mlflow.models.signature import infer_signature
 
 
 class ExperimentRunner:
@@ -171,8 +172,17 @@ class ExperimentRunner:
                         mlflow.log_metric("train_accuracy", train_acc)
                         mlflow.log_metric("val_accuracy", val_acc)
 
-                        # Log model
-                        mlflow.sklearn.log_model(full_pipeline, model_name)
+                        # Infer signature from training data and predictions
+                        train_preds = full_pipeline.predict(X_train)
+                        signature = infer_signature(X_train, train_preds)
+
+                        # Log the model with signature and input example
+                        mlflow.sklearn.log_model(
+                            sk_model=full_pipeline,
+                            artifact_path=model_name,
+                            signature=signature,
+                            input_example=X_train.head(5)  # optional example
+)
 
                         # Track best
                         if val_acc > best_accuracy:
