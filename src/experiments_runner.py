@@ -119,23 +119,19 @@ class ExperimentRunner:
         X_val = df_val.drop(columns=[self.config.target_column])
         y_val = df_val[self.config.target_column]
 
-        results = {}
         best_accuracy = -1
-        best_run_name = ""
         best_run_id = None
-        best_model_artifact_name = None
+        best_model_name = None
 
-        # Set the experiment
         mlflow.set_experiment(self.config.tracking.experiment_name)
         mlflow.autolog()
 
-        # Parent run to group nested runs
         iso_timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
         parent_run_name = f"Experiment_{iso_timestamp}"
+
         with mlflow.start_run(run_name=parent_run_name) as parent_run:
             parent_run_id = parent_run.info.run_id
 
-            # Outer loop: iterate over models
             for model_name in self.config.tuning.models_to_run:
                 logger.info(f"--- Processing model: {model_name} ---")
                 try:
@@ -148,69 +144,50 @@ class ExperimentRunner:
                 hp_combinations = get_hyperparameter_combinations(model_config.hyperparameters)
                 logger.info(f"Generated {len(hp_combinations)} hyperparameter combination(s) for {model_name}.")
 
-                # Inner loop: iterate over hyperparameter combinations
                 for i, hyperparams in enumerate(hp_combinations):
-                    run_name = f"{model_name}_Run_{i + 1}"
+                    run_name = f"{model_name}_Run_{i+1}"
                     logger.info(f"Starting run: {run_name} with HPs: {hyperparams}")
 
                     with mlflow.start_run(run_name=run_name, nested=True, parent_run_id=parent_run_id) as child_run:
-                        # Pipeline
                         classifier = ModelClass(random_state=self.config.random_seed, **hyperparams)
                         preprocessor = create_preprocessor(
                             self.config.data.features.numerical,
                             self.config.data.features.categorical
                         )
-                        full_pipeline = Pipeline([
+                        pipeline = Pipeline([
                             ('preprocessor', preprocessor),
                             ('classifier', classifier)
                         ])
-                        full_pipeline.fit(X_train, y_train)
+                        pipeline.fit(X_train, y_train)
 
-                        # Metrics
-                        train_acc = accuracy_score(y_train, full_pipeline.predict(X_train))
-                        val_acc = accuracy_score(y_val, full_pipeline.predict(X_val))
+                        train_acc = accuracy_score(y_train, pipeline.predict(X_train))
+                        val_acc = accuracy_score(y_val, pipeline.predict(X_val))
                         mlflow.log_metric("train_accuracy", train_acc)
                         mlflow.log_metric("val_accuracy", val_acc)
 
-                        # Infer signature from training data and predictions
-                        train_preds = full_pipeline.predict(X_train)
-                        signature = infer_signature(X_train, train_preds)
-
-                        # Log the model with signature and input example
+                        signature = infer_signature(X_train, pipeline.predict(X_train))
                         mlflow.sklearn.log_model(
-                            sk_model=full_pipeline,
-                            artifact_path=model_name,
+                            sk_model=pipeline,
+                            name=model_name,
                             signature=signature,
-                            input_example=X_train.head(5)  # optional example
-)
+                            input_example=X_train.head(5)
+                        )
 
-                        # Track best
                         if val_acc > best_accuracy:
                             best_accuracy = val_acc
-                            best_run_name = run_name
                             best_run_id = child_run.info.run_id
-                            best_model_artifact_name = model_name
+                            best_model_name = model_name
 
-                        # Store for bookkeeping
-                        results[run_name] = {
-                            "train_accuracy": train_acc,
-                            "val_accuracy": val_acc,
-                            "model": full_pipeline,
-                            "run_id": child_run.info.run_id
-                        }
+            if best_run_id and best_model_name:
+                model_uri = f"runs:/{best_run_id}/{best_model_name}"
+                registered_model = mlflow.register_model(model_uri, "BestFertilizerModel")
 
-            # Register best model (from the correct nested run)
-            if best_run_id and best_model_artifact_name:
-                model_uri = f"runs:/{best_run_id}/{best_model_artifact_name}"
-                mlflow.register_model(model_uri, "BestFertilizerModel")
-
-                # Optional tags
                 client = mlflow.tracking.MlflowClient()
-                client.set_tag("BestFertilizerModel", "best_val_accuracy", str(best_accuracy))
-                client.set_tag("BestFertilizerModel", "timestamp", iso_timestamp)
+                client.set_tag(best_run_id, "best_val_accuracy", str(best_accuracy))
+                client.set_tag(best_run_id, "timestamp", iso_timestamp)
 
-        logger.info(f"--- All experiments finished. Best run: {best_run_name} (Accuracy: {best_accuracy:.4f}) ---")
-        return f"Placeholder_RunID_{best_run_name}"
+        logger.info(f"--- All experiments finished. Best run: {best_run_id} (Accuracy: {best_accuracy:.4f}) ---")
+        return best_run_id
 
     def run_experiment_pipeline(self) -> str:
         """
