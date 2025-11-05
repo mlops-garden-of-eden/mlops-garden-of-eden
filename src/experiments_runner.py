@@ -122,69 +122,72 @@ class ExperimentRunner:
         best_accuracy = -1
         best_run_name = ""
 
-        # Create a new MLFlow experiment for the entire set of models being tested
-        mlflow.autolog()
-        iso_timestamp = datetime.now().isoformat()
-        experiment_name = f"{self.config.tracking.experiment_name}/{iso_timestamp}"
+        # Set up MLflow experiment (use one stable path)
+        experiment_name = self.config.tracking.experiment_name
         mlflow.set_experiment(experiment_name)
+        mlflow.autolog()
 
-        # Outer Loop: Iterate over all configured models
-        for model_name in self.config.tuning.models_to_run:
-            logger.info(f"--- Processing model: {model_name} ---")
-            
-            try:
-                model_config: ModelConfig = getattr(self.config.models, model_name)
-                ModelClass = get_model_class(model_config.type)
-            except Exception as e:
-                logger.error(f"Failed to set up model {model_name}. Error: {e}")
-                continue
+        # Create a timestamped parent run to group all sub-runs
+        iso_timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        parent_run_name = f"Experiment_{iso_timestamp}"
+        with mlflow.start_run(run_name=parent_run_name) as parent_run:
+            parent_run_id = parent_run.info.run_id
 
-            # Generate all hyperparameter combinations (Grid Search)
-            hp_combinations = get_hyperparameter_combinations(model_config.hyperparameters)
-            logger.info(f"Generated {len(hp_combinations)} hyperparameter combination(s) for {model_name}.")
+            # Outer Loop: Iterate over all configured models
+            for model_name in self.config.tuning.models_to_run:
+                logger.info(f"--- Processing model: {model_name} ---")
 
-            # Inner Loop: Iterate over each hyperparameter combination
-            for i, hyperparams in enumerate(hp_combinations):
-                run_name = f"{model_name}_Run_{i + 1}"
-                logger.info(f"Starting run: {run_name} with HPs: {hyperparams}")
+                try:
+                    model_config: ModelConfig = getattr(self.config.models, model_name)
+                    ModelClass = get_model_class(model_config.type)
+                except Exception as e:
+                    logger.error(f"Failed to set up model {model_name}. Error: {e}")
+                    continue
 
-                # Record each combination of hyperparameter and model as a single MLFlow run within the experiment
-                with mlflow.start_run(run_name=run_name):
-                    # Instantiate the model
-                    classifier = ModelClass(random_state=self.config.random_seed, **hyperparams)
+                hp_combinations = get_hyperparameter_combinations(model_config.hyperparameters)
+                logger.info(f"Generated {len(hp_combinations)} hyperparameter combination(s) for {model_name}.")
 
-                    # Preprocessor + pipeline
-                    numerical_features = self.config.data.features.numerical
-                    categorical_features = self.config.data.features.categorical
-                    preprocessor = create_preprocessor(numerical_features, categorical_features)
-                    full_pipeline = Pipeline(steps=[('preprocessor', preprocessor), ('classifier', classifier)])
+                # Inner Loop: Iterate over each hyperparameter combination
+                for i, hyperparams in enumerate(hp_combinations):
+                    run_name = f"{model_name}_Run_{i + 1}"
+                    logger.info(f"Starting run: {run_name} with HPs: {hyperparams}")
 
-                    # Training
-                    full_pipeline.fit(X_train, y_train)
+                    with mlflow.start_run(run_name=run_name, nested=True, parent_run_id=parent_run_id):
+                        # Instantiate the model
+                        classifier = ModelClass(random_state=self.config.random_seed, **hyperparams)
 
-                    # Compute metrics
-                    y_pred_train = full_pipeline.predict(X_train)
-                    y_pred_val = full_pipeline.predict(X_val)
-                    train_acc = accuracy_score(y_train, y_pred_train)
-                    val_acc = accuracy_score(y_val, y_pred_val)
+                        # Preprocessor + pipeline
+                        numerical_features = self.config.data.features.numerical
+                        categorical_features = self.config.data.features.categorical
+                        preprocessor = create_preprocessor(numerical_features, categorical_features)
+                        full_pipeline = Pipeline(steps=[('preprocessor', preprocessor), ('classifier', classifier)])
 
-                    # Log metrics
-                    mlflow.log_metric("train_accuracy", train_acc)
-                    mlflow.log_metric("val_accuracy", val_acc)
+                        # Training
+                        full_pipeline.fit(X_train, y_train)
 
-                    # Log model
-                    mlflow.sklearn.log_model(full_pipeline, model_name)
+                        # Compute metrics
+                        y_pred_train = full_pipeline.predict(X_train)
+                        y_pred_val = full_pipeline.predict(X_val)
+                        train_acc = accuracy_score(y_train, y_pred_train)
+                        val_acc = accuracy_score(y_val, y_pred_val)
 
-                    # Track best model
-                    if val_acc > best_accuracy:
-                        best_accuracy = val_acc
-                        best_run_name = run_name
+                        # Log metrics
+                        mlflow.log_metric("train_accuracy", train_acc)
+                        mlflow.log_metric("val_accuracy", val_acc)
 
-                results[run_name] = {
-                    "train_accuracy": train_acc,
-                    "val_accuracy": val_acc,
-                    "model": full_pipeline
-                }
+                        # Log model
+                        mlflow.sklearn.log_model(full_pipeline, model_name)
+
+                        # Track best model
+                        if val_acc > best_accuracy:
+                            best_accuracy = val_acc
+                            best_run_name = run_name
+
+                    results[run_name] = {
+                        "train_accuracy": train_acc,
+                        "val_accuracy": val_acc,
+                        "model": full_pipeline
+                    }
 
         logger.info(f"--- All experiments finished. Best run: {best_run_name} (Accuracy: {best_accuracy:.4f}) ---")
         
