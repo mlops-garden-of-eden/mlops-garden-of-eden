@@ -124,7 +124,7 @@ class ExperimentRunner:
 
         # Set MLflow experiment explicitly (parent folder must exist in Databricks)
         # experiment_name = self.config.tracking.experiment_name  # e.g., /Users/... or /Shared/...
-        experiment_name = "/Users/daveed@cs.toronto.edu/mlops-garden-of-eden-shared/test_runs"
+        experiment_name = "/Workspace/Users/daveed@cs.toronto.edu/mlops-garden-of-eden-personal/test_runs"
         mlflow.set_experiment(experiment_name)
         mlflow.autolog()  # optional: keeps sklearn/xgboost autologging
 
