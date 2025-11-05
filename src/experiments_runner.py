@@ -122,11 +122,11 @@ class ExperimentRunner:
         best_accuracy = -1
         best_run_name = ""
 
-        # Set MLflow experiment explicitly (parent folder must exist in Databricks)
-        # experiment_name = self.config.tracking.experiment_name  # e.g., /Users/... or /Shared/...
-        experiment_name = "/Workspace/Users/daveed@cs.toronto.edu/mlops-garden-of-eden-personal/test_runs"
+        # Create a new MLFlow experiment for the entire set of models being tested
+        mlflow.autolog()
+        iso_timestamp = datetime.now().isoformat()
+        experiment_name = f"{self.config.tracking.experiment_name}/{iso_timestamp}"
         mlflow.set_experiment(experiment_name)
-        mlflow.autolog()  # optional: keeps sklearn/xgboost autologging
 
         # Outer Loop: Iterate over all configured models
         for model_name in self.config.tuning.models_to_run:
