@@ -3,9 +3,9 @@ name: DAB Validation and Testing
 on:
   workflow_dispatch:
   pull_request:
-    branches: main
+    branches: [main]
   push:
-    branches: main
+    branches: [main, feature/github_action]
 
 jobs:
   validate-and-test:
