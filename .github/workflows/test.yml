@@ -1,0 +1,67 @@
+name: DAB Validation and Testing
+
+on:
+  pull_request:
+    branches: main
+  push:
+    branches: main
+
+jobs:
+  validate-and-test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+    
+    - name: Install Databricks CLI
+      run: |
+        curl -fsSL https://raw.githubusercontent.com/databricks/setup-cli/main/install.sh | sh
+    
+    - name: Configure Databricks CLI
+      run: |
+        databricks configure --host ${{ secrets.DATABRICKS_HOST }} --token ${{ secrets.DATABRICKS_TOKEN }}
+    
+    - name: Validate DAB Bundle
+      run: |
+        databricks bundle validate -t dev
+    
+    - name: Deploy to Dev Environment
+      run: |
+        databricks bundle deploy -t dev
+    
+    - name: Run Test Job
+      id: test_job
+      run: |
+        # Run the Test job and capture the run ID
+        RUN_OUTPUT=$(databricks bundle run Test -t dev)
+        RUN_ID=$(echo "$RUN_OUTPUT" | grep -oP 'Run URL:.*runs/\K[0-9]+' || echo "$RUN_OUTPUT" | grep -oP 'run_id":\s*\K[0-9]+')
+        echo "test_run_id=$RUN_ID" >> $GITHUB_OUTPUT
+        
+        # Wait for completion and check status
+        databricks runs wait $RUN_ID --timeout 30m
+        
+        # Get final state
+        STATE=$(databricks runs get $RUN_ID --output json | jq -r '.state.life_cycle_state')
+        RESULT=$(databricks runs get $RUN_ID --output json | jq -r '.state.result_state')
+        
+        if [ "$RESULT" != "SUCCESS" ]; then
+          echo "Test job failed with result: $RESULT"
+          exit 1
+        fi
+    
+    - name: Comment PR with Results
+      if: github.event_name == 'pull_request'
+      uses: actions/github-script@v6
+      with:
+        script: |
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: '✅ Both DAB jobs completed successfully!\n\n- Test Job Run ID: ${{ steps.test_job.outputs.test_run_id }}\n- RunExperiments Job Run ID: ${{ steps.experiments_job.outputs.experiments_run_id }}'
+          })
