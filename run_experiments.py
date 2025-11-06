@@ -1,6 +1,7 @@
 import argparse
 import logging
 import os
+from dataclasses import replace
 from src.utils import setup_logging, logger
 from src.config_manager import get_config
 from src.experiments_runner import run_experiment_stage
@@ -29,12 +30,17 @@ def main():
     # Load Configuration
     config = get_config(base_path=args.config)
 
+    override = {}
+
     # Allow override by environment variable as well
     env_override = os.environ.get("DATA_SOURCE")
     if args.data_source:
-        config.data_source = args.data_source
+        override["data_source"] = args.data_source
     elif env_override:
-        config.data_source = env_override
+        override["data_source"] = env_override
+
+    if override:
+        config = replace(config, **override)
 
     # Initialize Logging
     setup_logging(
