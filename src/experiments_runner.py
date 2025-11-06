@@ -145,54 +145,54 @@ class ExperimentRunner:
                 hp_combinations = get_hyperparameter_combinations(model_config.hyperparameters)
                 logger.info(f"Generated {len(hp_combinations)} hyperparameter combination(s) for {model_name}.")
 
-            # Inner Loop: Iterate over each hyperparameter combination
-            for i, hyperparams in enumerate(hp_combinations):
-                run_name = f"{model_name}_Run_{i + 1}"
-                logger.info(f"Starting run: {run_name} with HPs: {hyperparams}")
+                # Inner Loop: Iterate over each hyperparameter combination
+                for i, hyperparams in enumerate(hp_combinations):
+                    run_name = f"{model_name}_Run_{i + 1}"
+                    logger.info(f"Starting run: {run_name} with HPs: {hyperparams}")
 
-                # Record each combination of hyperparameter and model as a single MLFlow run within the experiment
-                with mlflow.start_run(run_name=run_name, nested=True, parent_run_id=parent_run_id) as child_run:
-                       
-                    # Instantiate the model with the specific combination of hyperparameters
-                    classifier = ModelClass(random_state=self.config.random_seed, **hyperparams)
-                    # Create the reusable preprocessor
-                    numerical_features = self.config.data.features.numerical
-                    categorical_features = self.config.data.features.categorical
-                    preprocessor = create_preprocessor(numerical_features, categorical_features)
+                    # Record each combination of hyperparameter and model as a single MLFlow run within the experiment
+                    with mlflow.start_run(run_name=run_name, nested=True, parent_run_id=parent_run_id) as child_run:
+                        
+                        # Instantiate the model with the specific combination of hyperparameters
+                        classifier = ModelClass(random_state=self.config.random_seed, **hyperparams)
+                        # Create the reusable preprocessor
+                        numerical_features = self.config.data.features.numerical
+                        categorical_features = self.config.data.features.categorical
+                        preprocessor = create_preprocessor(numerical_features, categorical_features)
 
-                    full_pipeline = Pipeline(steps=[
-                        ('preprocessor', preprocessor),
-                        ('classifier', classifier)
-                    ])
+                        full_pipeline = Pipeline(steps=[
+                            ('preprocessor', preprocessor),
+                            ('classifier', classifier)
+                        ])
 
-                    # Training
-                    full_pipeline.fit(X_train, y_train)
+                        # Training
+                        full_pipeline.fit(X_train, y_train)
 
-                    # Compute Training Accuracy
-                    y_pred_train = full_pipeline.predict(X_train)
-                    train_acc = accuracy_score(y_train, y_pred_train)
+                        # Compute Training Accuracy
+                        y_pred_train = full_pipeline.predict(X_train)
+                        train_acc = accuracy_score(y_train, y_pred_train)
 
-                    # Compute Validation Accuracy
-                    y_pred_val = full_pipeline.predict(X_val)
-                    val_acc = accuracy_score(y_val, y_pred_val)
-                    mlflow.log_metric("train_accuracy", train_acc)
-                    mlflow.log_metric("val_accuracy", val_acc)
-                    
-                    train_preds = full_pipeline.predict(X_train)
-                    signature = infer_signature(X_train, train_preds)
+                        # Compute Validation Accuracy
+                        y_pred_val = full_pipeline.predict(X_val)
+                        val_acc = accuracy_score(y_val, y_pred_val)
+                        mlflow.log_metric("train_accuracy", train_acc)
+                        mlflow.log_metric("val_accuracy", val_acc)
+                        
+                        train_preds = full_pipeline.predict(X_train)
+                        signature = infer_signature(X_train, train_preds)
 
-                    # Log the model with signature and input example
-                    mlflow.sklearn.log_model(
-                        sk_model=full_pipeline,
-                        artifact_path=model_name,
-                        signature=signature,
-                        input_example=X_train.head(5)  # optional example
-                        )
+                        # Log the model with signature and input example
+                        mlflow.sklearn.log_model(
+                            sk_model=full_pipeline,
+                            artifact_path=model_name,
+                            signature=signature,
+                            input_example=X_train.head(5)  # optional example
+                            )
 
-                    if val_acc > best_accuracy:
-                            best_accuracy = val_acc
-                            best_run_id = child_run.info.run_id
-                            best_model_artifact_name = model_name
+                        if val_acc > best_accuracy:
+                                best_accuracy = val_acc
+                                best_run_id = child_run.info.run_id
+                                best_model_artifact_name = model_name
 
         # Register best model
         if best_run_id and best_model_artifact_name:
