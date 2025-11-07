@@ -10,6 +10,10 @@ on:
 jobs:
   validate-and-test:
     runs-on: ubuntu-latest
+    environment: dev
+    env:
+      DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
+      DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
     
     steps:
     - uses: actions/checkout@v5
@@ -22,10 +26,6 @@ jobs:
     - name: Install Databricks CLI
       run: |
         curl -fsSL https://raw.githubusercontent.com/databricks/setup-cli/main/install.sh | sh
-    
-    - name: Configure Databricks CLI
-      run: |
-        databricks configure --host ${{ secrets.DATABRICKS_HOST }} --token ${{ secrets.DATABRICKS_TOKEN }}
     
     - name: Validate DAB Bundle
       run: |
@@ -54,15 +54,3 @@ jobs:
           echo "Test job failed with result: $RESULT"
           exit 1
         fi
-    
-    - name: Comment PR with Results
-      if: github.event_name == 'pull_request'
-      uses: actions/github-script@v8
-      with:
-        script: |
-          github.rest.issues.createComment({
-            issue_number: context.issue.number,
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            body: '✅ Both DAB jobs completed successfully!\n\n- Test Job Run ID: ${{ steps.test_job.outputs.test_run_id }}\n- RunExperiments Job Run ID: ${{ steps.experiments_job.outputs.experiments_run_id }}'
-          })
