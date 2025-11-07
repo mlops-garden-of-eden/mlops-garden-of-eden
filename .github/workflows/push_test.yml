@@ -40,17 +40,11 @@ jobs:
       run: |
         # Run the Test job and capture the run ID
         RUN_OUTPUT=$(databricks bundle run Test -t dev)
-        RUN_ID=$(echo "$RUN_OUTPUT" | grep -oP 'Run URL:.*runs/\K[0-9]+' || echo "$RUN_OUTPUT" | grep -oP 'run_id":\s*\K[0-9]+')
-        echo "test_run_id=$RUN_ID" >> $GITHUB_OUTPUT
         
-        # Wait for completion and check status
-        databricks runs wait $RUN_ID --timeout 30m
-        
-        # Get final state
-        STATE=$(databricks runs get $RUN_ID --output json | jq -r '.state.life_cycle_state')
-        RESULT=$(databricks runs get $RUN_ID --output json | jq -r '.state.result_state')
-        
-        if [ "$RESULT" != "SUCCESS" ]; then
-          echo "Test job failed with result: $RESULT"
+        # Check if "All tests passed" is in the output
+        if echo "$RUN_OUTPUT" | grep -q "All tests passed"; then
+          echo "Tests passed successfully."
+        else
+          echo "Tests failed."
           exit 1
         fi
