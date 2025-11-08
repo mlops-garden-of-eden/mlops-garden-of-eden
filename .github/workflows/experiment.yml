@@ -1,0 +1,47 @@
+name: Experiments
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+jobs:
+  validate-and-test:
+    runs-on: ubuntu-latest
+    environment: dev
+    env:
+      DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
+      DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+    
+    steps:
+    - uses: actions/checkout@v5
+    
+    - name: Set up Python
+      uses: actions/setup-python@v6
+      with:
+        python-version: '3.10'
+    
+    - name: Install Databricks CLI
+      run: |
+        curl -fsSL https://raw.githubusercontent.com/databricks/setup-cli/main/install.sh | sh
+    
+    - name: Validate DAB Bundle
+      run: |
+        databricks bundle validate -t dev
+    
+    - name: Deploy to Dev Environment
+      run: |
+        databricks bundle deploy -t dev
+    
+    - name: Run Test Job
+      id: test_job
+      run: |
+        # Run the Test job and capture the run ID
+        RUN_OUTPUT=$(databricks bundle run RunExperiments -t dev)
+        # Check if "All tests passed" is in the output
+        if echo "$RUN_OUTPUT" | grep -q "- INFO - ProjectLogger - Pipeline finished successfully."; then
+          echo "Tests passed successfully."
+        else
+          echo "Tests failed."
+          exit 1
+        fi
