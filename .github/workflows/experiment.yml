@@ -38,8 +38,8 @@ jobs:
       run: |
         # Run the Test job and capture the run ID
         RUN_OUTPUT=$(databricks bundle run RunExperiments -t dev)
-        # Check if "All tests passed" is in the output
-        if echo "$RUN_OUTPUT" | grep -q "- INFO - ProjectLogger - Pipeline finished successfully."; then
+        # Check if "Pipeline finished successfully." is in the output
+        if echo "$RUN_OUTPUT" | grep -q "Pipeline finished successfully."; then
           echo "Experiments ran successfully."
         else
           echo "Experiments failed."
