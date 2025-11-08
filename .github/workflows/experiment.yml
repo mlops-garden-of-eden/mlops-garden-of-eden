@@ -3,7 +3,7 @@ name: Experiments
 on:
   workflow_dispatch:
   push:
-    branches: [main]
+    branches: [main, feature/github_action]
 
 jobs:
   validate-and-test:
@@ -40,8 +40,8 @@ jobs:
         RUN_OUTPUT=$(databricks bundle run RunExperiments -t dev)
         # Check if "All tests passed" is in the output
         if echo "$RUN_OUTPUT" | grep -q "- INFO - ProjectLogger - Pipeline finished successfully."; then
-          echo "Tests passed successfully."
+          echo "Experiments ran successfully."
         else
-          echo "Tests failed."
+          echo "Experiments failed."
           exit 1
         fi
