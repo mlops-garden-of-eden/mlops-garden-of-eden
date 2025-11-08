@@ -15,7 +15,7 @@ This project predicts up to three optimal fertilizers for crops based on soil an
 - API: TBD (future deployment pipeline).
 - Testing:
     - Local test: run `python run_test.py`
-    - Remote test: First install Databricks CLI and configure it:
+    - Remote test (also be done during push): First install Databricks CLI and configure it:
         ```bash
         curl -fsSL https://raw.githubusercontent.com/databricks/setup-cli/main/install.sh | sh
         export DATABRICKS_HOST=https://dbc-6713e564-9737.cloud.databricks.com
