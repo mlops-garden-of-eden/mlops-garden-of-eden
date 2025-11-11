@@ -66,14 +66,18 @@ class ModelPredictor:
 
         logger.info(f"Loading model pipeline from: {model_path}")
 
-        # Load full pipeline (preprocessor + model)
+        # Load (pipeline, label_encoder) tuple
         with open(model_path, 'rb') as _f:
-            pipeline = pickle.load(_f)
-
-        self.model = pipeline
+            loaded = pickle.load(_f)
+        if isinstance(loaded, tuple) and len(loaded) == 2:
+            self.model, self.label_encoder = loaded
+            logger.info("Loaded pipeline and label encoder from artifact.")
+        else:
+            self.model = loaded
+            self.label_encoder = None
+            logger.warning("Loaded artifact is not a (pipeline, label_encoder) tuple. Predictions will not be mapped to fertilizer names.")
         self.preprocessor = None  # Not needed; pipeline handles preprocessing
-        self.metadata = {}  # Optionally, could extract from pipeline if needed
-
+        self.metadata = {}
         logger.info(f"Pipeline loaded successfully. Type: {type(self.model).__name__}")
     
     def validate_input(self, df: pd.DataFrame) -> None:
@@ -107,11 +111,14 @@ class ModelPredictor:
 
         # Load and prepare data
         # Support passing a DataFrame, a dict (single sample), a local CSV path, or None to use config paths
+
         if isinstance(input_data, pd.DataFrame):
             logger.info(f"Received input as DataFrame with shape {input_data.shape}")
             df = input_data.copy()
         elif isinstance(input_data, dict):
             logger.info("Received input as dict (single sample)")
+            # Remove 'id' if present in dict
+            input_data = {k: v for k, v in input_data.items() if k != 'id'}
             df = pd.DataFrame([input_data])
         elif isinstance(input_data, str):
             p = Path(input_data)
@@ -128,6 +135,10 @@ class ModelPredictor:
             logger.error("Unsupported input_data type for prediction. Pass DataFrame, dict, path str, or None.")
             raise ValueError("Unsupported input_data type for prediction. Pass DataFrame, dict, path str, or None.")
 
+        # Always drop 'id' column if present
+        if 'id' in df.columns:
+            df = df.drop(columns=['id'])
+
         # --- Feature engineering: apply same logic as training ---
         try:
             from src.feature_engineering import apply_feature_engineering
@@ -142,7 +153,20 @@ class ModelPredictor:
 
         logger.info(f"Running predictions on {len(df)} samples...")
 
+
         predictions = self.model.predict(df)
+        # If label_encoder is present, map predictions to fertilizer names
+        logger.info('Label encoder: %s', self.label_encoder)
+        logger.info('Label encoder classes: %s', getattr(self.label_encoder, 'classes_', None))
+        logger.info('Predictions before mapping: %s', predictions[:10])
+        if self.label_encoder is not None:
+            try:
+                mapped = self.label_encoder.inverse_transform(predictions)
+                logger.info('Predictions after mapping: %s', mapped[:10])
+                predictions = mapped
+            except Exception as e:
+                print('Mapping error:', e)
+                logger.warning(f"Could not map predictions to fertilizer names: {e}")
 
         # Get probabilities if available and requested
         probabilities = None

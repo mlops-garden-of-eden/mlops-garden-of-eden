@@ -37,21 +37,25 @@ def load_training_data(
             
         df = pd.read_csv(local_path)
 
-        # Apply optional renaming mapping supplied in the config
+
+        # Apply optional renaming mapping supplied in the config, but only if needed
         rename_map = getattr(data_config, "rename_columns", {}) or {}
         if rename_map:
-            # Check for duplicates after rename
-            projected = [rename_map.get(c, c) for c in df.columns]
-            if len(set(projected)) != len(projected):
-                raise ValueError("Column rename mapping would create duplicate column names")
-
-            # Warn for keys not present
-            missing = [k for k in rename_map.keys() if k not in df.columns]
-            if missing:
-                logger.warning(f"rename_columns contains keys not found in CSV: {missing}")
-
-            # Only rename keys that exist in dataframe
-            df = df.rename(columns={k: v for k, v in rename_map.items() if k in df.columns})
+            # If all new names are present, do nothing (already renamed)
+            all_new_names = set(rename_map.values())
+            if all(name in df.columns for name in all_new_names):
+                pass  # Already renamed, do nothing
+            else:
+                # Check for missing columns (neither old nor new name present)
+                missing = [k for k, v in rename_map.items() if k not in df.columns and v not in df.columns]
+                if missing:
+                    logger.warning(f"rename_columns contains keys not found in CSV and not already renamed: {missing}")
+                # Check for duplicates after rename
+                projected = [rename_map.get(c, c) for c in df.columns]
+                if len(set(projected)) != len(projected):
+                    raise ValueError("Column rename mapping would create duplicate column names")
+                # Only rename keys that exist in dataframe
+                df = df.rename(columns={k: v for k, v in rename_map.items() if k in df.columns})
 
         df = df.reset_index(drop=True)
         print(f"Successfully loaded {len(df)} rows from local path.")

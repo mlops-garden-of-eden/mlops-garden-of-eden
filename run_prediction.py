@@ -231,6 +231,9 @@ def main():
                 df = pd.read_csv(input_data)
 
             logger.info(f"Loaded DataFrame for batch prediction with shape {df.shape}")
+            # Always drop 'id' column if present
+            if 'id' in df.columns:
+                df = df.drop(columns=['id'])
             results = predictor.predict_batch(
                 df,
                 batch_size=args.batch_size,
