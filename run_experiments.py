@@ -28,7 +28,7 @@ def main():
     args = parser.parse_args()
 
     # Load Configuration
-    config = get_config(base_path=args.config)
+    config = get_config(args.config)
 
     override = {}
 

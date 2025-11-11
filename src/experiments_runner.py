@@ -3,6 +3,8 @@
 import mlflow
 import pandas as pd
 from datetime import datetime
+from pathlib import Path
+import pickle
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score
@@ -45,36 +47,22 @@ class ExperimentRunner:
 
     def preprocess_and_feature_engineer(self, df_train: pd.DataFrame, df_val: pd.DataFrame):
         """Stage 3: Feature engineering driven by config."""
+        from src.feature_engineering import apply_feature_engineering
         fe_cfg = getattr(self.config, "feature_engineering", None)
         if not fe_cfg or not getattr(fe_cfg, "enable", False):
             logger.info("Feature engineering disabled via config.")
             return df_train, df_val
 
-        applied_features = []
+        # Apply feature engineering to both train and val
+        df_train_fe = apply_feature_engineering(df_train, self.config)
+        df_val_fe = apply_feature_engineering(df_val, self.config)
 
-        operations = getattr(fe_cfg, "operations", []) or []
-        if not operations:
-            logger.info("No feature engineering operations defined in config.")
-            return df_train, df_val
+        # Optionally, log which features were added
+        added_cols = set(df_train_fe.columns) - set(df_train.columns)
+        if added_cols:
+            logger.info(f"Feature engineering added columns: {added_cols}")
 
-        for op in operations:
-            output_col = op.output
-            formula = op.formula
-            if not output_col or not formula:
-                logger.warning(f"Skipping invalid feature operation (missing output/formula): {op}")
-                continue
-
-            try:
-                df_train[output_col] = df_train.eval(formula)
-                df_val[output_col] = df_val.eval(formula)
-                applied_features.append(output_col)  # <-- track the feature
-                logger.info(f"Created numeric feature '{output_col}' using formula: {formula}")
-            except Exception as e:
-                logger.warning(f"Failed to create numeric feature '{output_col}': {e}")
-
-        logger.info(f"Numeric features successfully applied this run: {applied_features}") #<-- print
-
-        return df_train, df_val, applied_features
+        return df_train_fe, df_val_fe
 
     def _transform_labels(self, df_train: pd.DataFrame, df_val: pd.DataFrame) -> Tuple[pd.DataFrame, pd.DataFrame]:
         """
@@ -188,6 +176,24 @@ class ExperimentRunner:
                             signature=signature,
                             input_example=X_train.head(5)  # optional example
                             )
+
+                        # Optionally save a local copy of the trained pipeline for quick local inference
+                        artifacts_cfg = getattr(self.config, 'artifacts', None)
+                        try:
+                            save_local_flag = getattr(artifacts_cfg, 'save_local_models', False) if artifacts_cfg is not None else False
+                        except Exception:
+                            save_local_flag = False
+
+                        if save_local_flag:
+                            local_dir = Path(getattr(artifacts_cfg, 'local_models_dir', 'models'))
+                            local_dir.mkdir(parents=True, exist_ok=True)
+                            local_path = local_dir / f"{model_name}_{child_run.info.run_id}.pkl"
+                            try:
+                                with open(local_path, 'wb') as _f:
+                                    pickle.dump(full_pipeline, _f)
+                                logger.info(f"Saved local model artifact to {local_path}")
+                            except Exception as e:
+                                logger.warning(f"Failed to save local model artifact to {local_path}: {e}")
 
                         if val_acc > best_accuracy:
                                 best_accuracy = val_acc

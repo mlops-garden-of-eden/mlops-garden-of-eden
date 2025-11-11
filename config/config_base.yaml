@@ -117,3 +117,20 @@ tracking:
   log_settings:
     level: "INFO" # DEBUG, INFO, WARNING, ERROR, CRITICAL
     file_path: "logs/pipeline_run.log"
+
+# --- Prediction / Inference Defaults ---
+# Settings used by `run_prediction.py` and the prediction utilities. Projects may override in env-specific configs.
+prediction:
+  # Default model artifact path (can be overridden by CLI --model)
+  model_path: "models/XGBoostClassifier_1f1665615e564f4fb686a1e733fe54fe.pkl"
+  # Whether to include probability estimates when available. If omitted, dev mode defaults to True.
+  return_probabilities: true
+  # Default output file path for predictions (can be overridden by CLI --output)
+  output_path: "predictions/prediction_results.csv"
+
+# Artifact storage settings (local artifacts written during experiments and runs)
+artifacts:
+  # Whether experiments should write a local copy of trained models (pickled pipelines)
+  save_local_models: false
+  # Directory to write local model artifacts when enabled
+  local_models_dir: "models"
