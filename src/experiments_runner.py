@@ -3,6 +3,8 @@
 import mlflow
 import pandas as pd
 from datetime import datetime
+from pathlib import Path
+import pickle
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score
@@ -45,56 +47,23 @@ class ExperimentRunner:
 
     def preprocess_and_feature_engineer(self, df_train: pd.DataFrame, df_val: pd.DataFrame):
         """Stage 3: Feature engineering driven by config."""
+        from src.feature_engineering import apply_feature_engineering
         fe_cfg = getattr(self.config, "feature_engineering", None)
         if not fe_cfg or not getattr(fe_cfg, "enable", False):
             logger.info("Feature engineering disabled via config.")
-            return df_train, df_val
+            return df_train, df_val, set()
 
-        applied_features = []
+        # Apply feature engineering to both train and val
+        df_train_fe = apply_feature_engineering(df_train, self.config)
+        df_val_fe = apply_feature_engineering(df_val, self.config)
 
-        operations = getattr(fe_cfg, "operations", []) or []
-        if not operations:
-            logger.info("No feature engineering operations defined in config.")
-            return df_train, df_val
+        # Optionally, log which features were added
+        added_cols = set(df_train_fe.columns) - set(df_train.columns)
+        if added_cols:
+            logger.info(f"Feature engineering added columns: {added_cols}")
 
-        for op in operations:
-            output_col = op.output
-            formula = op.formula
-            if not output_col or not formula:
-                logger.warning(f"Skipping invalid feature operation (missing output/formula): {op}")
-                continue
+        return df_train_fe, df_val_fe, added_cols
 
-            try:
-                df_train[output_col] = df_train.eval(formula)
-                df_val[output_col] = df_val.eval(formula)
-                applied_features.append(output_col)  # <-- track the feature
-                logger.info(f"Created numeric feature '{output_col}' using formula: {formula}")
-            except Exception as e:
-                logger.warning(f"Failed to create numeric feature '{output_col}': {e}")
-
-        logger.info(f"Numeric features successfully applied this run: {applied_features}") #<-- print
-
-        return df_train, df_val, applied_features
-
-    def _transform_labels(self, df_train: pd.DataFrame, df_val: pd.DataFrame) -> Tuple[pd.DataFrame, pd.DataFrame]:
-        """
-        Encodes categorical labels (y) into numerical integers [0, 1, 2, ...].
-        """
-        target_col = self.config.target_column
-
-        # FIT and TRANSFORM on Training Data
-        logger.info(f"Fitting LabelEncoder on training labels ({target_col}).")
-        y_train_encoded = self.label_encoder.fit_transform(df_train[target_col])
-        
-        # TRANSFORM only on Validation Data (using the fitted encoder)
-        y_val_encoded = self.label_encoder.transform(df_val[target_col])
-
-        # Replace the original target columns with the encoded values
-        df_train[target_col] = y_train_encoded
-        df_val[target_col] = y_val_encoded
-        
-        logger.info(f"Labels transformed to numerical: {self.label_encoder.classes_}")
-        return df_train, df_val
 
     def split_data(self, df_raw: pd.DataFrame) -> Tuple[pd.DataFrame, pd.DataFrame]:
         """
@@ -114,11 +83,6 @@ class ExperimentRunner:
     def run_tuning_and_training(self, df_train: pd.DataFrame, df_val: pd.DataFrame) -> str:
         logger.info("Starting model training and hyperparameter exploration cycle.")
 
-        X_train = df_train.drop(columns=[self.config.target_column])
-        y_train = df_train[self.config.target_column]
-        X_val = df_val.drop(columns=[self.config.target_column])
-        y_val = df_val[self.config.target_column]
-
         best_accuracy = -1
         best_run_id = None
         best_model_artifact_name = None
@@ -134,7 +98,6 @@ class ExperimentRunner:
 
             for model_name in self.config.tuning.models_to_run:
                 logger.info(f"--- Processing model: {model_name} ---")
-                
                 try:
                     model_config: ModelConfig = getattr(self.config.models, model_name)
                     ModelClass = get_model_class(model_config.type)
@@ -150,15 +113,25 @@ class ExperimentRunner:
                     run_name = f"{model_name}_Run_{i + 1}"
                     logger.info(f"Starting run: {run_name} with HPs: {hyperparams}")
 
-                    # Record each combination of hyperparameter and model as a single MLFlow run within the experiment
                     with mlflow.start_run(run_name=run_name, nested=True, parent_run_id=parent_run_id) as child_run:
-                        
+                        # Prepare data for this run
+                        X_train = df_train.drop(columns=[self.config.target_column])
+                        y_train = df_train[self.config.target_column]
+                        X_val = df_val.drop(columns=[self.config.target_column])
+                        y_val = df_val[self.config.target_column]
+
+                        # Fit label encoder on y_train
+                        label_encoder = LabelEncoder()
+                        y_train_enc = label_encoder.fit_transform(y_train)
+                        y_val_enc = label_encoder.transform(y_val)
+
                         # Instantiate the model with the specific combination of hyperparameters
                         classifier = ModelClass(random_state=self.config.random_seed, **hyperparams)
                         # Create the reusable preprocessor
                         numerical_features = self.config.data.features.numerical
                         categorical_features = self.config.data.features.categorical
-                        preprocessor = create_preprocessor(numerical_features, categorical_features)
+                        meta_features = getattr(self.config.data, 'meta_features', [])
+                        preprocessor = create_preprocessor(numerical_features, categorical_features, meta_features=meta_features)
 
                         full_pipeline = Pipeline(steps=[
                             ('preprocessor', preprocessor),
@@ -166,20 +139,23 @@ class ExperimentRunner:
                         ])
 
                         # Training
-                        full_pipeline.fit(X_train, y_train)
+                        full_pipeline.fit(X_train, y_train_enc)
 
                         # Compute Training Accuracy
                         y_pred_train = full_pipeline.predict(X_train)
-                        train_acc = accuracy_score(y_train, y_pred_train)
+                        train_acc = accuracy_score(y_train_enc, y_pred_train)
 
                         # Compute Validation Accuracy
                         y_pred_val = full_pipeline.predict(X_val)
-                        val_acc = accuracy_score(y_val, y_pred_val)
+                        val_acc = accuracy_score(y_val_enc, y_pred_val)
                         mlflow.log_metric("train_accuracy", train_acc)
                         mlflow.log_metric("val_accuracy", val_acc)
-                        
+
                         train_preds = full_pipeline.predict(X_train)
                         signature = infer_signature(X_train, train_preds)
+
+                        # Save both pipeline and label_encoder as a tuple
+                        pipeline_and_encoder = (full_pipeline, label_encoder)
 
                         # Log the model with signature and input example
                         mlflow.sklearn.log_model(
@@ -187,12 +163,30 @@ class ExperimentRunner:
                             artifact_path=model_name,
                             signature=signature,
                             input_example=X_train.head(5)  # optional example
-                            )
+                        )
+
+                        # Optionally save a local copy of the trained pipeline for quick local inference
+                        artifacts_cfg = getattr(self.config, 'artifacts', None)
+                        try:
+                            save_local_flag = getattr(artifacts_cfg, 'save_local_models', False) if artifacts_cfg is not None else False
+                        except Exception:
+                            save_local_flag = False
+
+                        if save_local_flag:
+                            local_dir = Path(getattr(artifacts_cfg, 'local_models_dir', 'models'))
+                            local_dir.mkdir(parents=True, exist_ok=True)
+                            local_path = local_dir / f"{model_name}_{child_run.info.run_id}.pkl"
+                            try:
+                                with open(local_path, 'wb') as _f:
+                                    pickle.dump(pipeline_and_encoder, _f)
+                                logger.info(f"Saved local model artifact to {local_path}")
+                            except Exception as e:
+                                logger.warning(f"Failed to save local model artifact to {local_path}: {e}")
 
                         if val_acc > best_accuracy:
-                                best_accuracy = val_acc
-                                best_run_id = child_run.info.run_id
-                                best_model_artifact_name = model_name
+                            best_accuracy = val_acc
+                            best_run_id = child_run.info.run_id
+                            best_model_artifact_name = model_name
 
         # Register best model
         if best_run_id and best_model_artifact_name:
@@ -204,8 +198,8 @@ class ExperimentRunner:
             client.set_tag(best_run_id, "timestamp", iso_timestamp)
 
         logger.info(f"--- All experiments finished. Best run: {best_run_id} (Accuracy: {best_accuracy:.4f}) ---")
-        
         return best_run_id
+
 
     def run_experiment_pipeline(self) -> str:
         """
@@ -215,23 +209,19 @@ class ExperimentRunner:
             The unique identifier (run_id) of the best model's experiment.
         """
         logger.info("Starting MLOps experiment pipeline orchestration.")
-        
         try:
             # Load Data
             df_raw = self.load_data()
-            
+
             # Split Data
             df_train, df_val = self.split_data(df_raw)
 
-            # Transform Labels
-            df_train, df_val = self._transform_labels(df_train, df_val)
-            
             # Preprocess and Train (The Core Experimentation)
             # Calls the method that loops through models, preprocesses, trains, and evaluates
             df_train, df_val, applied_features = self.preprocess_and_feature_engineer(df_train, df_val)
             logger.info(f"Applied features (pipeline): {applied_features}") # <-- can replace with MLflow integration
             best_run_id = self.run_tuning_and_training(df_train, df_val)
-            
+
             logger.info("Pipeline execution completed successfully.")
             return best_run_id
 

@@ -27,6 +27,21 @@ class FeatureConfig:
     numerical: List[str]
     categorical: List[str]
 
+
+@dataclass(frozen=True)
+class PredictionConfig:
+    """Schema for prediction/inference settings."""
+    model_path: str
+    return_probabilities: bool = True
+    output_path: str = "predictions/prediction_results.csv"
+
+
+@dataclass(frozen=True)
+class ArtifactsConfig:
+    """Schema for artifact storage settings used by experiments and runs."""
+    save_local_models: bool = False
+    local_models_dir: str = "models"
+
 @dataclass(frozen=True)
 class DataConfig:
     """Schema for data source and table names"""
@@ -83,7 +98,9 @@ class Config:
     data: DataConfig
     tuning: TuningConfig
     tracking: TrackingConfig
-    models: ModelsConfig 
+    models: ModelsConfig
+    prediction: PredictionConfig = PredictionConfig(model_path="models/latest_model.pkl")
+    artifacts: ArtifactsConfig = ArtifactsConfig()
     feature_engineering: FeatureEngineeringConfig = FeatureEngineeringConfig()
 
 # --- Loading Function ---
@@ -111,25 +128,58 @@ def _merge_configs(base_config: Dict[str, Any], override_config: Dict[str, Any])
             
     return merged_config
 
-def get_config(base_path: str = 'config_base.yaml') -> Config:
+def get_config(config_path: str = 'config/config_base.yaml') -> Config:
     """
-    Loads and validates the complete configuration using a base file.
-    """
-    base_config_path = Path(base_path)
-    config_dict = _load_yaml_file(base_config_path)
+    Load configuration by merging the base config and an optional environment-specific override.
 
-    if config_dict is None:
-        raise ValueError(f"Configuration file is empty or invalid YAML: {base_config_path}")
+    Behavior:
+    - If `config_path` points to `config_base.yaml`, it is loaded directly.
+    - If `config_path` points to an environment file (e.g. `config_dev.yaml` or `config_prod.yaml`),
+      the function will look for `config_base.yaml` in the same directory and merge base <- override
+      so that the override only needs to specify differing keys.
+    """
+    config_path = Path(config_path)
+
+    # If the caller passed an env override (not the base file), try to merge it with base
+    if config_path.name != 'config_base.yaml':
+        override_path = config_path
+        base_path = config_path.parent / 'config_base.yaml'
+        if base_path.exists():
+            base_cfg = _load_yaml_file(base_path) or {}
+            override_cfg = _load_yaml_file(override_path) or {}
+            config_dict = _merge_configs(base_cfg, override_cfg)
+        else:
+            # No base found, load the provided file alone
+            config_dict = _load_yaml_file(config_path) or {}
+    else:
+        # Directly load base config
+        config_dict = _load_yaml_file(config_path) or {}
+
+    if not config_dict:
+        raise ValueError(f"Configuration file is empty or invalid YAML: {config_path}")
 
     # Construct Nested Dataclass Instances
 
-    # Instantiate FeatureConfig
-    data_dict = config_dict['data']
-    feature_config = FeatureConfig(**data_dict.pop('features')) # Instantiate FeatureConfig
+    # Instantiate FeatureConfig and DataConfig
+    data_dict = config_dict.get('data', {})
+    feature_config = FeatureConfig(**data_dict.pop('features')) if data_dict.get('features') else FeatureConfig(numerical=[], categorical=[])
+    data_config = DataConfig(features=feature_config, **data_dict) if data_dict else DataConfig(features=feature_config)
+    config_dict.pop('data', None)
 
-    # Instantiate DataConfig, passing the FeatureConfig instance
-    data_config = DataConfig(features=feature_config, **data_dict)
-    config_dict.pop('data')
+    # Instantiate PredictionConfig (optional)
+    pred_cfg = config_dict.pop('prediction', None)
+    if pred_cfg:
+        prediction_config = PredictionConfig(**pred_cfg)
+    else:
+        # default prediction config
+        prediction_config = PredictionConfig(model_path="models/latest_model.pkl", return_probabilities=True, output_path="predictions/prediction_results.csv")
+
+    # Instantiate ArtifactsConfig (optional)
+    artifacts_cfg = config_dict.pop('artifacts', None)
+    if artifacts_cfg:
+        artifacts_config = ArtifactsConfig(**artifacts_cfg)
+    else:
+        artifacts_config = ArtifactsConfig()
 
     # Instantiate feature_engineering config if present in YAML
     fe_cfg = config_dict.pop("feature_engineering", None)
@@ -166,14 +216,16 @@ def get_config(base_path: str = 'config_base.yaml') -> Config:
     # Construct the top-level Config
     try:
         config = Config(
-        data=data_config,
-        tuning=tuning_config,
-        tracking=tracking_config,
-        models=models_config,
-        feature_engineering=feature_engineering_config,
-        **config_dict
-    )
+            data=data_config,
+            tuning=tuning_config,
+            tracking=tracking_config,
+            models=models_config,
+            prediction=prediction_config,
+            artifacts=artifacts_config,
+            feature_engineering=feature_engineering_config,
+            **config_dict
+        )
     except TypeError as e:
         raise ValueError(f"Configuration validation failed for top-level Config: {e}")
-        
+
     return config

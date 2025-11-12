@@ -25,3 +25,15 @@ models:
       penalty: "l2"
       C: 0.85 
       solver: "saga"
+
+# Production prediction settings
+prediction:
+  # Path to the production model artifact
+  model_path: "models/XGBoostClassifier_1f1665615e564f4fb686a1e733fe54fe.pkl"
+  # In production we typically do not return probability columns by default
+  return_probabilities: false
+
+# Production artifact overrides
+artifacts:
+  save_local_models: false
+  local_models_dir: "models"

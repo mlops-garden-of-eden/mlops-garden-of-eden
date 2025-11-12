@@ -66,7 +66,7 @@ def test_config_base_loading_simple(temp_config_files):
     """
     
     # Load the config using the temporary file path
-    config = get_config(base_path=str(temp_config_files))
+    config = get_config(str(temp_config_files))
 
     # Verification 1: Top-level object
     assert isinstance(config, Config), "Output is not the expected Config dataclass type."

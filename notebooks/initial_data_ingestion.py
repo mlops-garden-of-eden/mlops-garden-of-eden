@@ -44,7 +44,7 @@ from scripts.initial_data_handling import prepare_initial_datasets
 # Configuration Loading
 # Load configuration parameters and set up data paths and processing parameters
 
-config = get_config(base_path='config/config_base.yaml')
+config = get_config('config/config_base.yaml')
 RAW_DATA_PATH = Path(config.data.local_raw_path)
 TEST_SET_OUTPUT_PATH = Path(config.data.local_test_data_path)
 INITIAL_DATASET_OUTPUT_PATH = Path(config.data.local_train_data_path)
