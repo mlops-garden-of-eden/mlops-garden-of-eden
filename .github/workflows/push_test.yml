@@ -48,3 +48,14 @@ jobs:
           echo "Tests failed."
           exit 1
         fi
+
+    - name: Run Local Inference Test
+      run: |
+        pytest tests/test_mlflow_model_loading.py
+        # Check if all test are passed
+        if [ $? -ne 0 ]; then
+          echo "Local inference tests failed."
+          exit 1
+        else
+          echo "Local inference tests passed successfully."
+        fi

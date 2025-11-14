@@ -33,4 +33,4 @@ prediction:
 # Development artifact overrides
 artifacts:
   save_local_models: true
-  local_models_dir: "models"
+  local_models_dir: "/Workspace/Shared/models"

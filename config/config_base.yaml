@@ -122,7 +122,8 @@ tracking:
 # Settings used by `run_prediction.py` and the prediction utilities. Projects may override in env-specific configs.
 prediction:
   # Default model artifact path (can be overridden by CLI --model)
-  model_path: "models/XGBoostClassifier_1f1665615e564f4fb686a1e733fe54fe.pkl"
+  # Can be either a local path or MLflow URI (runs:/{run_id}/{artifact_path})
+  model_path: "runs:/1f1665615e564f4fb686a1e733fe54fe/XGBoostClassifier"
   # Whether to include probability estimates when available. If omitted, dev mode defaults to True.
   return_probabilities: true
   # Default output file path for predictions (can be overridden by CLI --output)
