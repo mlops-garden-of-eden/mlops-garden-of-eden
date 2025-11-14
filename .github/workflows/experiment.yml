@@ -2,8 +2,6 @@ name: Experiments
 
 on:
   workflow_dispatch:
-  push:
-    branches: [main, feature/github_action]
 
 jobs:
   validate-and-test:
