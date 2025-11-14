@@ -4,16 +4,18 @@ from pathlib import Path
 from src.config_manager import get_config
 from src.predictor import run_prediction
 import streamlit as st
+import os
 
-DEFAULT_CONFIG_PATH = "config/config_prod.yaml"
+# Use production config for deployed app, dev for local testing
+DEFAULT_CONFIG_PATH = os.getenv("CONFIG_PATH", "config/config_prod.yaml")
 
 # Load config and get feature names
 def get_feature_lists(config_path=DEFAULT_CONFIG_PATH):
     config = get_config(config_path)
     num = config.data.features.numerical
     cat = config.data.features.categorical
-    # Get unique categorical values from train.csv
-    df = pd.read_csv("data/train.csv")
+    # Get unique categorical values from dataset_small.csv
+    df = pd.read_csv("data/dataset_small.csv")
     # Use renamed columns if present in config
     rename_map = getattr(config.data, "rename_columns", {}) or {}
     df = df.rename(columns={k: v for k, v in rename_map.items() if k in df.columns})

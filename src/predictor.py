@@ -49,8 +49,13 @@ class ModelPredictor:
     def load_model(self, model_path: Optional[str] = None) -> None:
         """
         Load a trained pipeline (model + preprocessor as a single object).
+        Supports both local file paths and MLflow URIs.
+        
         Args:
-            model_path: Path to saved model. If None, uses config.
+            model_path: Path to saved model. Can be:
+                - Local file path: "models/model.pkl"
+                - MLflow run URI: "runs:/{run_id}/{artifact_path}"
+                - MLflow models URI: "models:/{model_name}/{version_or_stage}"
         """
         if model_path is None:
             pred_cfg = getattr(self.config, 'prediction', None)
@@ -59,26 +64,140 @@ class ModelPredictor:
                 logger.error("Model path not provided to load_model() and no 'prediction.model_path' found in config.")
                 raise ValueError("Model path not provided to load_model() and no 'prediction.model_path' found in config.")
 
-        model_path = Path(model_path)
-        if not model_path.exists():
-            logger.error(f"Model not found at: {model_path}")
-            raise FileNotFoundError(f"Model not found at: {model_path}")
-
-        logger.info(f"Loading model pipeline from: {model_path}")
-
-        # Load (pipeline, label_encoder) tuple
-        with open(model_path, 'rb') as _f:
-            loaded = pickle.load(_f)
-        if isinstance(loaded, tuple) and len(loaded) == 2:
-            self.model, self.label_encoder = loaded
-            logger.info("Loaded pipeline and label encoder from artifact.")
+        # Check if it's an MLflow URI
+        if isinstance(model_path, str) and (model_path.startswith("runs:/") or model_path.startswith("models:/")):
+            logger.info(f"Loading model from MLflow URI: {model_path}")
+            try:
+                import mlflow
+                import tempfile
+                
+                # Set MLflow tracking URI from config if available
+                tracking_cfg = getattr(self.config, 'tracking', None)
+                if tracking_cfg is not None:
+                    mlflow_uri = getattr(tracking_cfg, 'mlflow_tracking_uri', None)
+                    if mlflow_uri:
+                        mlflow.set_tracking_uri(mlflow_uri)
+                        logger.info(f"Set MLflow tracking URI to: {mlflow_uri}")
+                
+                # Load model from MLflow
+                loaded = mlflow.sklearn.load_model(model_path)
+                
+                # MLflow models are typically just the pipeline, not (pipeline, encoder) tuple
+                if isinstance(loaded, tuple) and len(loaded) == 2:
+                    self.model, self.label_encoder = loaded
+                    logger.info("Loaded pipeline and label encoder from MLflow artifact.")
+                else:
+                    self.model = loaded
+                    logger.info("Loaded model from MLflow. Attempting to load label encoder separately...")
+                    
+                    # Try to load label encoder from separate artifact
+                    # Extract run_id and artifact_path from model_path
+                    try:
+                        if model_path.startswith("runs:/"):
+                            # Format: runs:/{run_id}/{artifact_path}
+                            parts = model_path.replace("runs:/", "").split("/", 1)
+                            run_id = parts[0]
+                            artifact_path = parts[1] if len(parts) > 1 else ""
+                            
+                            # Download label encoder artifact
+                            encoder_artifact_path = f"{artifact_path}_label_encoder"
+                            logger.info(f"Looking for label encoder at: {encoder_artifact_path}")
+                            
+                            client = mlflow.tracking.MlflowClient()
+                            temp_dir = tempfile.mkdtemp()
+                            try:
+                                # download_artifacts returns the local path to the downloaded artifact
+                                artifact_uri = client.download_artifacts(run_id, encoder_artifact_path, temp_dir)
+                                artifact_path_obj = Path(artifact_uri)
+                                
+                                logger.info(f"Downloaded artifact to: {artifact_path_obj}")
+                                
+                                # The downloaded artifact could be either:
+                                # 1. A directory containing the pickle file
+                                # 2. The pickle file itself
+                                
+                                possible_files = []
+                                
+                                if artifact_path_obj.is_file():
+                                    # It's the file itself
+                                    possible_files.append(artifact_path_obj)
+                                elif artifact_path_obj.is_dir():
+                                    # It's a directory, look for .pkl files
+                                    pkl_files = list(artifact_path_obj.glob("*.pkl"))
+                                    possible_files.extend(pkl_files)
+                                    # Also try specific names
+                                    possible_files.append(artifact_path_obj / "label_encoder.pkl")
+                                    possible_files.append(artifact_path_obj / f"{artifact_path}.pkl")
+                                
+                                logger.info(f"Trying to load from: {[str(f) for f in possible_files]}")
+                                
+                                encoder_loaded = False
+                                for enc_path in possible_files:
+                                    if enc_path.exists() and enc_path.is_file():
+                                        logger.info(f"Found encoder file: {enc_path}")
+                                        try:
+                                            with open(enc_path, 'rb') as f:
+                                                self.label_encoder = pickle.load(f)
+                                            logger.info(f"✅ Loaded label encoder from: {enc_path}")
+                                            encoder_loaded = True
+                                            break
+                                        except Exception as e:
+                                            logger.warning(f"Failed to load from {enc_path}: {e}")
+                                            continue
+                                
+                                if not encoder_loaded:
+                                    logger.warning(f"Label encoder artifact not found. Predictions will be numeric.")
+                                    logger.warning(f"Checked path: {artifact_path_obj}")
+                                    self.label_encoder = None
+                                    
+                            except Exception as e:
+                                logger.warning(f"Could not load label encoder: {e}. Predictions will be numeric.")
+                                self.label_encoder = None
+                            finally:
+                                # Cleanup temp directory
+                                import shutil
+                                try:
+                                    shutil.rmtree(temp_dir)
+                                except:
+                                    pass
+                        else:
+                            # For models:/ URIs, we can't easily get the label encoder
+                            logger.warning("Label encoder not available for model registry URIs. Predictions will be numeric.")
+                            self.label_encoder = None
+                            
+                    except Exception as e:
+                        logger.warning(f"Error loading label encoder: {e}. Predictions will be numeric.")
+                        self.label_encoder = None
+                
+                self.preprocessor = None
+                self.metadata = {}
+                logger.info(f"Pipeline loaded successfully from MLflow. Type: {type(self.model).__name__}")
+                
+            except Exception as e:
+                logger.error(f"Failed to load model from MLflow URI: {e}")
+                raise
         else:
-            self.model = loaded
-            self.label_encoder = None
-            logger.warning("Loaded artifact is not a (pipeline, label_encoder) tuple. Predictions will not be mapped to fertilizer names.")
-        self.preprocessor = None  # Not needed; pipeline handles preprocessing
-        self.metadata = {}
-        logger.info(f"Pipeline loaded successfully. Type: {type(self.model).__name__}")
+            # Load from local file path
+            model_path = Path(model_path)
+            if not model_path.exists():
+                logger.error(f"Model not found at: {model_path}")
+                raise FileNotFoundError(f"Model not found at: {model_path}")
+
+            logger.info(f"Loading model pipeline from local file: {model_path}")
+
+            # Load (pipeline, label_encoder) tuple
+            with open(model_path, 'rb') as _f:
+                loaded = pickle.load(_f)
+            if isinstance(loaded, tuple) and len(loaded) == 2:
+                self.model, self.label_encoder = loaded
+                logger.info("Loaded pipeline and label encoder from artifact.")
+            else:
+                self.model = loaded
+                self.label_encoder = None
+                logger.warning("Loaded artifact is not a (pipeline, label_encoder) tuple. Predictions will not be mapped to fertilizer names.")
+            self.preprocessor = None  # Not needed; pipeline handles preprocessing
+            self.metadata = {}
+            logger.info(f"Pipeline loaded successfully. Type: {type(self.model).__name__}")
     
     def validate_input(self, df: pd.DataFrame) -> None:
         # No-op: pipeline handles feature selection internally

@@ -9,6 +9,8 @@ resources:
             parameters:
                 - "--data-source"
                 - "databricks"
+                - "--config"
+                - "config/config_dev.yaml"
           environment_key: Default
       queue:
         enabled: true

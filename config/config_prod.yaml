@@ -28,8 +28,10 @@ models:
 
 # Production prediction settings
 prediction:
-  # Path to the production model artifact
-  model_path: "models/XGBoostClassifier_1f1665615e564f4fb686a1e733fe54fe.pkl"
+  # MLflow URI to the production model artifact
+  # Format: "runs:/{run_id}/{artifact_path}" or "models:/{model_name}/{version_or_stage}"
+  # Replace {run_id} with your actual MLflow run ID from Databricks
+  model_path: "runs:/732a55d454d64e9c8ff02cf6c1a210f2/XGBoostClassifier"
   # In production we typically do not return probability columns by default
   return_probabilities: false
 

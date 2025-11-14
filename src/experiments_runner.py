@@ -164,6 +164,17 @@ class ExperimentRunner:
                             signature=signature,
                             input_example=X_train.head(5)  # optional example
                         )
+                        
+                        # Log label encoder as a separate artifact
+                        import tempfile
+                        with tempfile.NamedTemporaryFile(mode='wb', suffix='.pkl', delete=False) as f:
+                            pickle.dump(label_encoder, f)
+                            temp_path = f.name
+                        try:
+                            mlflow.log_artifact(temp_path, artifact_path=f"{model_name}_label_encoder")
+                            logger.info(f"Logged label encoder as artifact: {model_name}_label_encoder")
+                        finally:
+                            Path(temp_path).unlink()  # Clean up temp file
 
                         # Optionally save a local copy of the trained pipeline for quick local inference
                         artifacts_cfg = getattr(self.config, 'artifacts', None)
