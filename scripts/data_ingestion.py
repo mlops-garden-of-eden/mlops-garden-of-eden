@@ -259,6 +259,7 @@ def main() -> None:
         if download_file(data_url, tmp_path):
             ingest_data(config, tmp_path, source=args.source)
             os.remove(tmp_path)
+            print("Data ingestion completed successfully.")
         else:
             print("Failed to download the data file.")
     else:
@@ -266,6 +267,7 @@ def main() -> None:
             data_url = os.path.join(BASE_PATH, data_url)
         if os.path.exists(data_url):
             ingest_data(config, data_url, source=args.source)
+            print("Data ingestion completed successfully.")
         else:
             print("Local data file does not exist.")
 

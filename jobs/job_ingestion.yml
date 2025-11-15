@@ -1,0 +1,29 @@
+resources:
+  jobs:
+    DataIngestion:
+      name: DataIngestion
+      parameters:
+        - name: file_path
+          default: "https://drive.google.com/file/d/15mJ_uAGbrQwocpTFkP9xaj1y5BwsDJHs/view?usp=drive_link"
+        - name: source
+          default: "google drive"
+      tasks:
+        - task_key: data_ingestion
+          spark_python_task:
+            python_file: ../scripts/data_ingestion.py
+            parameters:
+              - --file_path
+              - "{{job.parameters.file_path}}"
+              - --source
+              - "{{job.parameters.source}}"
+          environment_key: Default
+      queue:
+        enabled: true
+      environments:
+        - environment_key: Default
+          spec:
+            client: "4"
+            dependencies:
+              - -r
+                ../requirements.txt
+      performance_target: PERFORMANCE_OPTIMIZED
