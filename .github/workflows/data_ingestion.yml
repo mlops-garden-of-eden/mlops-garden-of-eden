@@ -1,0 +1,59 @@
+name: Data Ingestion
+
+on:
+  workflow_dispatch:
+    inputs:
+      file_path:
+        description: 'URL of the data file'
+        required: true
+        default: 'https://drive.google.com/file/d/15mJ_uAGbrQwocpTFkP9xaj1y5BwsDJHs/view?usp=drive_link'
+        type: string
+      source:
+        description: 'Source of the data file'
+        required: false
+        default: 'Google Drive'
+        type: string
+  push:
+    branches:
+      - feature/data-ingestion-action
+
+jobs:
+  validate-and-test:
+    runs-on: ubuntu-latest
+    environment: dev
+    env:
+      DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
+      DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+    
+    steps:
+    - uses: actions/checkout@v5
+    
+    - name: Set up Python
+      uses: actions/setup-python@v6
+      with:
+        python-version: '3.10'
+    
+    - name: Install Databricks CLI
+      run: |
+        curl -fsSL https://raw.githubusercontent.com/databricks/setup-cli/main/install.sh | sh
+    
+    - name: Validate DAB Bundle
+      run: |
+        databricks bundle validate -t dev
+    
+    - name: Deploy to Dev Environment
+      run: |
+        databricks bundle deploy -t dev
+
+    - name: Run Data Ingestion Job
+      id: data_ingestion_job
+      run: |
+        # Run the Data Ingestion job and capture the run ID
+        RUN_OUTPUT=$(databricks bundle run DataIngestion -t dev --params file_path="${{ github.event.inputs.file_path }}" --params source="${{ github.event.inputs.source }}")
+        # Check if "Data ingestion completed successfully." is in the output
+        if echo "$RUN_OUTPUT" | grep -q "Data ingestion completed successfully."; then
+          echo "Data Ingestion job ran successfully."
+        else
+          echo "Data Ingestion job failed."
+          exit 1
+        fi
